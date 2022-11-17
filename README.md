@@ -1,4 +1,4 @@
-# Baldur's_Late
+# Baldur-s_Late
 
-# Robert Oh
+# Robert Oh (A01321210)
 # Collin Chan (A01337496)
