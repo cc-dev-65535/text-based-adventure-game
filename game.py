@@ -48,19 +48,42 @@ A01321210
 #hit_detection() # rng calculation according to stats
 
 import itertools
+import random
 
-def init_board():
-    pass
+
+def fill_board_coordinates_vertical_walls(board, start, rows, times):
+    list_of_column_number = [start] * times
+    for pair in zip(range(rows, times), list_of_column_number):
+        board[pair] = ["|"]
+
+
+def fill_board_coordinates_horizontal_walls(board, start, columns, times):
+    list_of_row_number = [start] * times
+    for pair in zip(list_of_row_number, range(columns, times)):
+        print(pair)
+        board[pair] = ["-"]
+
+
+def init_board(board):
+    """"
+    list_of_row_number = [0] * 10
+    for pair in zip(list_of_row_number, range(10)):
+        board[pair].append("-")
+    """
+    fill_board_coordinates_horizontal_walls(board, 0, 0, 10)
+    fill_board_coordinates_horizontal_walls(board, 9, 0, 10)
+    fill_board_coordinates_vertical_walls(board, 0, 0, 10)
+    fill_board_coordinates_vertical_walls(board, 9, 0, 10)
+
 
 def make_board(row, column):
     board = {}
-    for n in range(10):
-        list = [n] * 10
-        for pair in zip (list, range(10)):
-            board[pair] = []
+    for row_coordinate in range(row):
+        list_of_row_number = [row_coordinate] * row
+        for pair in zip(list_of_row_number, range(column)):
+            board[pair] = [" "]
     return board
-    #print(board)
-    #print(len(board))
+
 
 def print_board(board):
     for k, v in board.items():
@@ -113,14 +136,16 @@ def game():
 
     #out of while loop
     # print end game message
+"""
 
 def main():
-    game()
+    """
+    Drives the program.
+    """
+    my_board = make_board(10, 10)
+    init_board(my_board)
+    print_board(my_board)
 
 
 if __name__ == "__main__":
     main()
-"""
-
-my_board = make_board(10,10)
-print(my_board)
