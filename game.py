@@ -2,6 +2,27 @@
 Robert Oh
 A01321210
 """
+#MORE NOTES
+#name chris
+#level 1
+#make_character returns dictionary?
+# {"status": {"hp" : , "mp": , "level" : }}
+#describe current location returns
+#get user choice uses a enumerated list and returns a
+#check for challenges returns true or false
+#character carreis around a dictionary that is basically it's global status
+#once boss is beaten, leave the main game loop;
+# to move, the game prints out a list for us and we select an element out of it
+# make_board returns a dictionary?? Yes, it returns a dictionary with tuples/coordinates as keys?
+# combat: combat_was_a_success function causes player level ups
+# probability of encounters is 20% at beignning
+
+#make_board example
+# def make_board(rows, columns):
+#     board = {}
+#     for row in rows:
+#         for column in columns:
+#             board[(row,columns)] = "something is in this coordinate"
 
 # add .idea/ to git ignore
 
@@ -26,8 +47,28 @@ A01321210
 #combat_victory()
 #hit_detection() # rng calculation according to stats
 
+import itertools
+
+def init_board():
+    pass
+
 def make_board(row, column):
     board = {}
+    for n in range(10):
+        list = [n] * 10
+        for pair in zip (list, range(10)):
+            board[pair] = []
+    return board
+    #print(board)
+    #print(len(board))
+
+def print_board(board):
+    for k, v in board.items():
+        print(f"{k}={v} ", end="")
+        if k[1] == 9:
+            print("\n")
+
+"""
     for rows in rows:
         for column in columns:
             # board[(row,column)] = ["Welcome to this room", None]
@@ -79,3 +120,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
+
+my_board = make_board(10,10)
+print(my_board)
