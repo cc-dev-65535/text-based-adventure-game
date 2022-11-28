@@ -3,17 +3,12 @@ Robert Oh
 A01321210
 """
 #MORE NOTES
-#name chris
-#level 1
-#make_character returns dictionary?
-# {"status": {"hp" : , "mp": , "level" : }}
 #describe current location returns
 #get user choice uses a enumerated list and returns a
 #check for challenges returns true or false
 #character carreis around a dictionary that is basically it's global status
 #once boss is beaten, leave the main game loop;
 # to move, the game prints out a list for us and we select an element out of it
-# make_board returns a dictionary?? Yes, it returns a dictionary with tuples/coordinates as keys?
 # combat: combat_was_a_success function causes player level ups
 # probability of encounters is 20% at beignning
 
@@ -23,8 +18,6 @@ A01321210
 #     for row in rows:
 #         for column in columns:
 #             board[(row,columns)] = "something is in this coordinate"
-
-# add .idea/ to git ignore
 
 # git conflict (pushing w/o pulling first)
 # PULL first: merge incoming changes to branch
@@ -50,44 +43,63 @@ A01321210
 import itertools
 import random
 
+environment_list = ["enem", "ridl", "none"]
 
-def fill_board_coordinates_vertical_walls(board, start, rows, times):
-    list_of_column_number = [start] * times
-    for pair in zip(range(rows, times), list_of_column_number):
-        board[pair] = ["|"]
+def make_character(name):
+    return {"name" : name, "coordinates": (0,0), "HP": 150, "MP": 150}
 
-
-def fill_board_coordinates_horizontal_walls(board, start, columns, times):
-    list_of_row_number = [start] * times
-    for pair in zip(list_of_row_number, range(columns, times)):
-        print(pair)
-        board[pair] = ["-"]
+def fill_board_coordinates_vertical(board, coords, times, generate_function):
+    (start_x, start_y) = coords
+    for pair in zip(range(start_x, start_x + times), [start_y] * times):
+        board[pair] = generate_function
 
 
-def init_board(board):
+def fill_board_coordinates_horizontal(board, coords, times, generate_function):
+    (start_x, start_y) = coords
+    for pair in zip([start_x] * times, range(start_y, start_y + times)):
+        board[pair] = generate_function
+
+def random_event():
+    random_num = random.randint(1, 100)
+    if random_num < 49:
+        return environment_list[0]
+    elif 49 < random_num < 70:
+        return environment_list[1]
+    else:
+        return environment_list[2]
+
+
+def empty():
+    return "none"
+
+def wall():
+    return "wall"
+
+
+def make_board(rows, columns):
     """"
     list_of_row_number = [0] * 10
     for pair in zip(list_of_row_number, range(10)):
         board[pair].append("-")
     """
-    fill_board_coordinates_horizontal_walls(board, 0, 0, 10)
-    fill_board_coordinates_horizontal_walls(board, 9, 0, 10)
-    fill_board_coordinates_vertical_walls(board, 0, 0, 10)
-    fill_board_coordinates_vertical_walls(board, 9, 0, 10)
-
-
-def make_board(row, column):
     board = {}
-    for row_coordinate in range(row):
-        list_of_row_number = [row_coordinate] * row
-        for pair in zip(list_of_row_number, range(column)):
-            board[pair] = [" "]
+    for row_coordinate in range(rows):
+        list_of_row_number = [row_coordinate] * rows
+        for pair in zip(list_of_row_number, range(columns)):
+            board[pair] = random_event
+    #fill_board_coordinates_horizontal(board, (0, 0), 10, walls)
+    #fill_board_coordinates_horizontal(board, (rows - 1, 0), 10, walls)
+    #fill_board_coordinates_vertical(board, (0, 0), 10, walls)
+    #fill_board_coordinates_vertical(board, (0, columns - 1), 10, walls)
+    fill_board_coordinates_horizontal(board, (2, 2), 5, wall)
+    fill_board_coordinates_horizontal(board, (5, 2), 5, wall)
+    fill_board_coordinates_horizontal(board, (0, 0), 1, empty)
     return board
 
 
 def print_board(board):
     for k, v in board.items():
-        print(f"{k}={v} ", end="")
+        print(f"{k}={v()} ", end="")
         if k[1] == 9:
             print("\n")
 
@@ -143,8 +155,8 @@ def main():
     Drives the program.
     """
     my_board = make_board(10, 10)
-    init_board(my_board)
     print_board(my_board)
+    print(make_character("Collin"))
 
 
 if __name__ == "__main__":
