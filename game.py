@@ -39,70 +39,6 @@ A01321210
 #intiative()
 #combat_victory()
 #hit_detection() # rng calculation according to stats
-
-import itertools
-import random
-
-environment_list = ["enem", "ridl", "none"]
-
-def make_character(name):
-    return {"name" : name, "coordinates": (0,0), "HP": 150, "MP": 150}
-
-def fill_board_coordinates_vertical(board, coords, times, generate_function):
-    (start_x, start_y) = coords
-    for pair in zip(range(start_x, start_x + times), [start_y] * times):
-        board[pair] = generate_function
-
-
-def fill_board_coordinates_horizontal(board, coords, times, generate_function):
-    (start_x, start_y) = coords
-    for pair in zip([start_x] * times, range(start_y, start_y + times)):
-        board[pair] = generate_function
-
-def random_event():
-    random_num = random.randint(1, 100)
-    if random_num < 49:
-        return environment_list[0]
-    elif 49 < random_num < 70:
-        return environment_list[1]
-    else:
-        return environment_list[2]
-
-
-def empty():
-    return "none"
-
-def wall():
-    return "wall"
-
-
-def make_board(rows, columns):
-    """"
-    list_of_row_number = [0] * 10
-    for pair in zip(list_of_row_number, range(10)):
-        board[pair].append("-")
-    """
-    board = {}
-    for row_coordinate in range(rows):
-        list_of_row_number = [row_coordinate] * rows
-        for pair in zip(list_of_row_number, range(columns)):
-            board[pair] = random_event
-    #fill_board_coordinates_horizontal(board, (0, 0), 10, walls)
-    #fill_board_coordinates_horizontal(board, (rows - 1, 0), 10, walls)
-    #fill_board_coordinates_vertical(board, (0, 0), 10, walls)
-    #fill_board_coordinates_vertical(board, (0, columns - 1), 10, walls)
-    fill_board_coordinates_horizontal(board, (2, 2), 5, wall)
-    fill_board_coordinates_horizontal(board, (5, 2), 5, wall)
-    fill_board_coordinates_horizontal(board, (0, 0), 1, empty)
-    return board
-
-
-def print_board(board):
-    for k, v in board.items():
-        print(f"{k}={v()} ", end="")
-        if k[1] == 9:
-            print("\n")
-
 """
     for rows in rows:
         for column in columns:
@@ -150,13 +86,125 @@ def game():
     # print end game message
 """
 
+import itertools
+import random
+import move
+
+ENVIRONMENT_LIST = ("enem", "ridl", "none")
+
+
+def make_character(name):
+    return {"name" : name, "coordinates": (0,0), "HP": 150, "MP": 150}
+
+
+def fill_board_coordinates_vertical(board, coords, times, generate_function):
+    (start_x, start_y) = coords
+    for pair in zip(range(start_x, start_x + times), itertools.repeat(start_y, times)):
+        board[pair] = generate_function
+
+
+def fill_board_coordinates_horizontal(board, coords, times, generate_function):
+    (start_x, start_y) = coords
+    for pair in zip(itertools.repeat(start_x, times), range(start_y, start_y + times)):
+        board[pair] = generate_function
+
+
+def random_event():
+    random_num = random.randint(1, 100)
+    if random_num < 49:
+        return ENVIRONMENT_LIST[0]
+    elif 49 < random_num < 70:
+        return ENVIRONMENT_LIST[1]
+    else:
+        return ENVIRONMENT_LIST[2]
+
+
+def empty():
+    return "none"
+
+
+def wall():
+    return "wall"
+
+
+def make_board(rows, columns):
+    """
+    """
+    board = {}
+    for row_coordinate in range(rows):
+        for pair in zip(itertools.repeat(row_coordinate, rows), range(columns)):
+            board[pair] = random_event
+    fill_board_coordinates_horizontal(board, (2, 2), 5, wall)
+    fill_board_coordinates_horizontal(board, (5, 2), 5, wall)
+    fill_board_coordinates_horizontal(board, (0, 0), 1, empty)
+    return board
+
+
+def get_coordinate_state(coordinate):
+    #print(coordinate())
+    if 'wall' == coordinate():
+        return 'wall'
+    elif 'item' == coordinate():
+        return 'item'
+    else:
+        return '????'
+
+
+def map_board(board, character):
+    for k, v in board.items():
+        if k == character["coordinates"]:
+            print(f"{k}=@@@@ ", end="")
+        else:
+            print(f"{k}={get_coordinate_state(v)} ", end="")
+        if k[1] == 9:
+            print("\n")
+
+
+def describe_current_location(board, character):
+    return board[character["coordinates"]]()
+
+
+def game():
+    rows = 10
+    columns = 10
+    board = make_board(rows, columns)
+    character = make_character("Collin")
+    achieve_goal = False
+    while not achieve_goal:
+        # tell user where they are
+        #unfreeze()
+        print(f"you see: {describe_current_location(board, character)} at {character['coordinates']}")
+        #direction = get_user_choice() # enumerate user choices (North, West, East, South)
+        direction = input("make a move\n")
+        if (direction == "map"):
+            map_board(board, character)
+            continue
+        valid_move = move.validate_move(board, character, direction) # return false if move is out of bounds
+        if valid_move:
+            #freeze(board[character["coordinates"]])
+            character["coordinates"] = move.move_character(character, direction) # update coords
+            print(f"you see: {describe_current_location(board, character)} at {character['coordinates']}")
+            input("do something!\n")
+            #roll_for_initiaive = check_for_challenges() # return true after rolling RNG
+            #if roll_for_initiaive:
+                #execute_challenge_protocol(character)
+                #if character_has_leveled():
+                    #execute_glow_up_protocol() # ASCII art? congradulation message
+            #achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
+                # one of the key: value pair in character should be boss_killed : False
+        else:
+            print(f"can't move to {move.move_character(character, direction)}")
+            # tell user they can't go in that direction
+
+    #out of while loop
+    # print end game message
+
+
 def main():
     """
     Drives the program.
     """
-    my_board = make_board(10, 10)
-    print_board(my_board)
-    print(make_character("Collin"))
+    game()
 
 
 if __name__ == "__main__":
