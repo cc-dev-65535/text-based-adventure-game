@@ -1,3 +1,7 @@
+import itertools
+import random
+import move
+
 """
 Robert Oh
 A01321210
@@ -84,20 +88,18 @@ def game():
 
     #out of while loop
     # print end game message
+    
+REMEMBER ANNOTATIONS
 """
-
-import itertools
-import random
-import move
-
-ENVIRONMENT_LIST = ("enem", "ridl", "none")
+# Global constant for random event environments, add more elements for higher probability of occurrence
+ENVIRONMENT_LIST = ("enem", "enem", "enem", "ridl", "none")
 
 
 def make_character(name):
-    return {"name" : name, "coordinates": (0,0), "HP": 150, "MP": 150}
+    return {"name": name, "coordinates": (6, 4), "HP": 150, "MP": 150}
 
 
-def fill_board_coordinates_vertical(board, coords, times, generate_function):
+def fill_board_coordinates_vertical(board, coords, times, generate_function) -> None:
     (start_x, start_y) = coords
     for pair in zip(range(start_x, start_x + times), itertools.repeat(start_y, times)):
         board[pair] = generate_function
@@ -110,13 +112,8 @@ def fill_board_coordinates_horizontal(board, coords, times, generate_function):
 
 
 def random_event():
-    random_num = random.randint(1, 100)
-    if random_num < 49:
-        return ENVIRONMENT_LIST[0]
-    elif 49 < random_num < 70:
-        return ENVIRONMENT_LIST[1]
-    else:
-        return ENVIRONMENT_LIST[2]
+    random_num = random.randint(1, 100) % (len(ENVIRONMENT_LIST) - 1)
+    return ENVIRONMENT_LIST[random_num]
 
 
 def empty():
@@ -125,6 +122,10 @@ def empty():
 
 def wall():
     return "wall"
+
+
+def river():
+    return "watr"
 
 
 def make_board(rows, columns):
@@ -136,18 +137,17 @@ def make_board(rows, columns):
             board[pair] = random_event
     fill_board_coordinates_horizontal(board, (2, 2), 5, wall)
     fill_board_coordinates_horizontal(board, (5, 2), 5, wall)
-    fill_board_coordinates_horizontal(board, (0, 0), 1, empty)
+    fill_board_coordinates_vertical(board, (5, 3), 5, river)
+    fill_board_coordinates_horizontal(board, (0, 0), 1, river)
     return board
 
 
+def set_coordinate_state(board, coordinate, generate_function):
+    board[coordinate] = generate_function
+
+
 def get_coordinate_state(coordinate):
-    #print(coordinate())
-    if 'wall' == coordinate():
-        return 'wall'
-    elif 'item' == coordinate():
-        return 'item'
-    else:
-        return '????'
+    return coordinate() if coordinate() in move.OBSTACLES else '????'
 
 
 def map_board(board, character):
@@ -168,36 +168,32 @@ def game():
     rows = 10
     columns = 10
     board = make_board(rows, columns)
-    character = make_character("Collin")
+    character = make_character("Chris")
     achieve_goal = False
     while not achieve_goal:
-        # tell user where they are
-        #unfreeze()
+        set_coordinate_state(board, character["coordinates"], empty)
         print(f"you see: {describe_current_location(board, character)} at {character['coordinates']}")
-        #direction = get_user_choice() # enumerate user choices (North, West, East, South)
+        # direction = get_user_choice() # enumerate user choices (North, West, East, South)
         direction = input("make a move\n")
-        if (direction == "map"):
+        if direction == "map":
             map_board(board, character)
             continue
         valid_move = move.validate_move(board, character, direction) # return false if move is out of bounds
         if valid_move:
-            #freeze(board[character["coordinates"]])
+            set_coordinate_state(board, character["coordinates"], random_event)
             character["coordinates"] = move.move_character(character, direction) # update coords
             print(f"you see: {describe_current_location(board, character)} at {character['coordinates']}")
             input("do something!\n")
-            #roll_for_initiaive = check_for_challenges() # return true after rolling RNG
-            #if roll_for_initiaive:
-                #execute_challenge_protocol(character)
-                #if character_has_leveled():
-                    #execute_glow_up_protocol() # ASCII art? congradulation message
-            #achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
+            # roll_for_initiaive = check_for_challenges() # return true after rolling RNG
+            # if roll_for_initiaive:
+                # execute_challenge_protocol(character)
+                # if character_has_leveled():
+                    # execute_glow_up_protocol() # ASCII art? congradulation message
+            # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
                 # one of the key: value pair in character should be boss_killed : False
         else:
             print(f"can't move to {move.move_character(character, direction)}")
-            # tell user they can't go in that direction
-
-    #out of while loop
-    # print end game message
+    print("you have finished.")
 
 
 def main():
