@@ -91,12 +91,13 @@ def game():
     
 REMEMBER ANNOTATIONS
 """
-# Global constant for random event environments, add more elements for higher probability of occurrence
-ENVIRONMENT_LIST = ("enem", "enem", "enem", "ridl", "none")
-
+# Global constant for random event environments
+ENVIRONMENTS = ("enem", "ridl", "none")
+ALLOWABLE_USER_INPUT_FIGHTING = ("fight", "hide", "")
+ALLOWABLE_USER_INPUT_MOVING = ()
 
 def make_character(name):
-    return {"name": name, "coordinates": (6, 4), "HP": 150, "MP": 150}
+    return {"name": name, "coordinates": (6, 4), "level": 2, "HP": 150, "MP": 150}
 
 
 def fill_board_coordinates_vertical(board, coords, times, generate_function) -> None:
@@ -111,24 +112,33 @@ def fill_board_coordinates_horizontal(board, coords, times, generate_function):
         board[pair] = generate_function
 
 
-def random_event():
-    random_num = random.randint(1, 100) % (len(ENVIRONMENT_LIST) - 1)
-    return ENVIRONMENT_LIST[random_num]
+def leveled_up():
+    pass
 
 
-def empty():
-    return "none"
+def random_event(character):
+    enemies_list = list(itertools.repeat(ENVIRONMENTS[0], character["level"] * 3))
+    ridl_list = list(itertools.repeat(ENVIRONMENTS[1], character["level"] * 2))
+    none_list = list(itertools.repeat(ENVIRONMENTS[2], character["level"] * 1))
+    scaled_environment_list = list(itertools.chain.from_iterable([enemies_list, ridl_list, none_list]))
+    # print(scaled_environment_list)
+    return random.choice(scaled_environment_list)
 
 
-def wall():
+def cool_description(character):
+    return random.choice(["the musty ground envelops you", "the dark air is suffocating",
+                          "you can't see through this fog", "You smell rotting flesh"])
+
+
+def wall(character):
     return "wall"
 
 
-def river():
+def river(character):
     return "watr"
 
 
-def make_board(rows, columns):
+def make_board(rows, columns, character):
     """
     """
     board = {}
@@ -138,7 +148,7 @@ def make_board(rows, columns):
     fill_board_coordinates_horizontal(board, (2, 2), 5, wall)
     fill_board_coordinates_horizontal(board, (5, 2), 5, wall)
     fill_board_coordinates_vertical(board, (5, 3), 5, river)
-    fill_board_coordinates_horizontal(board, (0, 0), 1, river)
+    fill_board_coordinates_vertical(board, (1, 1), 5, river)
     return board
 
 
@@ -146,8 +156,9 @@ def set_coordinate_state(board, coordinate, generate_function):
     board[coordinate] = generate_function
 
 
-def get_coordinate_state(coordinate):
-    return coordinate() if coordinate() in move.OBSTACLES else '????'
+def get_coordinate_state(coordinate, character):
+    # print(type(coordinate))
+    return coordinate(character) if coordinate(character) in move.OBSTACLES else '????'
 
 
 def map_board(board, character):
@@ -155,26 +166,36 @@ def map_board(board, character):
         if k == character["coordinates"]:
             print(f"{k}=@@@@ ", end="")
         else:
-            print(f"{k}={get_coordinate_state(v)} ", end="")
+            print(f"{k}={get_coordinate_state(v, character)} ", end="")
         if k[1] == 9:
             print("\n")
 
 
 def describe_current_location(board, character):
-    return board[character["coordinates"]]()
+    environment = board[character["coordinates"]](character)
+    if environment in ENVIRONMENTS:
+        print(f"you see a {environment}, you are at {character['coordinates']}")
+    else:
+        print(f"{environment}, you are at {character['coordinates']}")
+    return environment
+
+
+def get_character_name():
+    return input("Enter a name, brave adventurer: ")
 
 
 def game():
     rows = 10
     columns = 10
-    board = make_board(rows, columns)
-    character = make_character("Chris")
+    name = get_character_name()
+    character = make_character(name)
+    board = make_board(rows, columns, character)
     achieve_goal = False
     while not achieve_goal:
-        set_coordinate_state(board, character["coordinates"], empty)
-        print(f"you see: {describe_current_location(board, character)} at {character['coordinates']}")
+        set_coordinate_state(board, character["coordinates"], cool_description)
+        describe_current_location(board, character)
         # direction = get_user_choice() # enumerate user choices (North, West, East, South)
-        direction = input("make a move\n")
+        direction = input("make a move or type map: ")
         if direction == "map":
             map_board(board, character)
             continue
@@ -182,17 +203,17 @@ def game():
         if valid_move:
             set_coordinate_state(board, character["coordinates"], random_event)
             character["coordinates"] = move.move_character(character, direction) # update coords
-            print(f"you see: {describe_current_location(board, character)} at {character['coordinates']}")
-            input("do something!\n")
-            # roll_for_initiaive = check_for_challenges() # return true after rolling RNG
-            # if roll_for_initiaive:
+            current_environment = describe_current_location(board, character)
+            if current_environment in [env for env in ENVIRONMENTS if env != "none"]:
+                print("FIGHT")
+                pass
                 # execute_challenge_protocol(character)
                 # if character_has_leveled():
                     # execute_glow_up_protocol() # ASCII art? congradulation message
             # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
                 # one of the key: value pair in character should be boss_killed : False
         else:
-            print(f"can't move to {move.move_character(character, direction)}")
+            print(f"can't move to {move.move_character(character, direction)}, there is an obstacle")
     print("you have finished.")
 
 
