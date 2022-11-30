@@ -5,13 +5,13 @@ OBSTACLES = ("wall", "water")
 def move_character(character, direction) -> tuple[int,int]:
     # update hp and mp here?
     (x, y) = character["coordinates"]
-    if direction == "s":
+    if direction == "SOUTH":
         new_coordinates = (x + 1, y)
-    if direction == "n":
+    if direction == "NORTH":
         new_coordinates = (x - 1, y)
-    if direction == "e":
+    if direction == "EAST":
         new_coordinates = (x, y + 1)
-    if direction == "w":
+    if direction == "WEST":
         new_coordinates = (x, y - 1)
     return new_coordinates
 

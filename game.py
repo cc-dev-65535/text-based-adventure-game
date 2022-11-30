@@ -93,11 +93,12 @@ def game():
     
 REMEMBER ANNOTATIONS
 """
-VALID_USER_INPUT_MOVING = ("w", "a", "s", "d")
+VALID_USER_INPUT_MOVING = ("1", "2", "3", "4", "5")
+USER_INPUT_MAPPING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
 
 
 def make_character(name):
-    return {"name": name, "coordinates": (6, 4), "level": 2, "HP": 150, "MP": 150}
+    return {"name": name, "coordinates": (6, 4), "level": 2, "HP": 150, "MP": 150, "EXP": 0}
 
 
 def leveled_up():
@@ -134,7 +135,7 @@ def set_coordinate_state(board, coordinate, generate_function):
     board[coordinate] = generate_function
 
 
-def get_coordinate_state(coordinate, character):
+def get_coordinate_state_for_map(coordinate, character):
     # print(type(coordinate))
     return coordinate(character)[1] if coordinate(character)[0] in OBSTACLES else '?'
 
@@ -142,20 +143,33 @@ def get_coordinate_state(coordinate, character):
 def map_board(board, character):
     for k, v in board.items():
         if k == character["coordinates"]:
-            print(f"{k}=! ", end="")
+            print(f"[!] ", end="")
         else:
-            print(f"{k}={get_coordinate_state(v, character)} ", end="")
+            print(f"[{get_coordinate_state_for_map(v, character)}] ", end="")
         if k[1] == 9:
             print("")
-
+    print("")
 
 def describe_current_location(board, character):
     environment = board[character["coordinates"]](character)
     if environment in ENVIRONMENTS:
-        print(f"you see {environment[0]}, you are at {character['coordinates']}")
+        print(f"you see {environment[0]}, you are at {character['coordinates']}\n")
     else:
-        print(f"{environment[0]}, you are at {character['coordinates']}")
+        print(f"{environment[0]}, you are at {character['coordinates']}\n")
     return environment
+
+
+def is_none(environment):
+    return environment[0] != "nothing"
+
+
+def get_user_choice():
+    user_input = ""
+    while user_input not in VALID_USER_INPUT_MOVING:
+        user_input = input("select your move:\n1.North\n2.East\n3.South\n4.West\n5.See a map\n")
+    for index, value in enumerate(USER_INPUT_MAPPING, 1):
+        if str(index) == user_input:
+            return value
 
 
 def game():
@@ -169,17 +183,16 @@ def game():
     while not achieve_goal:
         set_coordinate_state(board, character["coordinates"], cool_description)
         describe_current_location(board, character)
-        # direction = get_user_choice() # enumerate user choices (North, West, East, South)
-        direction = input("make a move or type map: ")
-        if direction == "map":
+        direction = get_user_choice()
+        if direction == "MAP":
             map_board(board, character)
             continue
-        valid_move = validate_move(board, character, direction) # return false if move is out of bounds
+        valid_move = validate_move(board, character, direction)
         if valid_move:
             set_coordinate_state(board, character["coordinates"], random_event)
             character["coordinates"] = move_character(character, direction) # update coords
             current_environment = describe_current_location(board, character)
-            if current_environment in [env for env in ENVIRONMENTS if env[0] != "none"]:
+            if current_environment in list(filter(is_none, list(ENVIRONMENTS))):
                 print("FIGHTING")
                 pass
                 # execute_challenge_protocol(character)
