@@ -1,6 +1,7 @@
-OBSTACLES = ("wall", "watr")
+# Global constant for obstacle environments
+OBSTACLES = ("wall", "water")
 
-## REMEMBER ANNOTATIONS
+
 def move_character(character, direction) -> tuple[int,int]:
     # update hp and mp here?
     (x, y) = character["coordinates"]
@@ -17,6 +18,6 @@ def move_character(character, direction) -> tuple[int,int]:
 
 def validate_move(board, character, direction):
     coordinates_moved = move_character(character, direction)
-    if (coordinates_moved not in board.keys()) or (board[coordinates_moved]() in OBSTACLES):
+    if (coordinates_moved not in board.keys()) or (board[coordinates_moved](character)[0] in OBSTACLES):
         return False
     return True
