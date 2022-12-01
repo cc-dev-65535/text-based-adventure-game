@@ -94,7 +94,10 @@ def game():
 REMEMBER ANNOTATIONS
 """
 VALID_USER_INPUT_MOVING = ("1", "2", "3", "4", "5")
-USER_INPUT_MAPPING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
+USER_INPUT_MAPPING_MOVING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
+
+VALID_USER_INPUT_FIGHTING = ("1", "2", "3", "4")
+USER_INPUT_MAPPING_FIGHTING_LEVEL_ONE = ("PUNCH", "KICK", "BITE", "HEADBUTT")
 
 
 def make_character(name):
@@ -148,14 +151,12 @@ def map_board(board, character):
             print(f"[{get_coordinate_state_for_map(v, character)}] ", end="")
         if k[1] == 9:
             print("")
-    print("")
+    print("! = you, # = water, % = wall")
+
 
 def describe_current_location(board, character):
     environment = board[character["coordinates"]](character)
-    if environment in ENVIRONMENTS:
-        print(f"you see {environment[0]}, you are at {character['coordinates']}\n")
-    else:
-        print(f"{environment[0]}, you are at {character['coordinates']}\n")
+    print(f"{environment[2]}, you are at {character['coordinates']}\n")
     return environment
 
 
@@ -163,13 +164,51 @@ def is_none(environment):
     return environment[0] != "nothing"
 
 
-def get_user_choice():
+def get_user_choice(input_type, input_map):
     user_input = ""
-    while user_input not in VALID_USER_INPUT_MOVING:
-        user_input = input("select your move:\n1.North\n2.East\n3.South\n4.West\n5.See a map\n")
-    for index, value in enumerate(USER_INPUT_MAPPING, 1):
+    choices_to_print = "select your move:\n"
+    enumerated_choices = list(enumerate(input_map, 1))
+    while user_input not in input_type:
+        for choice in enumerated_choices:
+            choices_to_print += f"{choice[0]}.{choice[1]}\n"
+        user_input = input(choices_to_print)
+    for index, value in enumerated_choices:
         if str(index) == user_input:
             return value
+
+
+def enemy_not_dead(enemy):
+    return enemy["HP"] >= 0
+
+
+def character_not_dead(character):
+    return character["HP"] >= 0
+
+
+def damage_the_enemy(enemy, skill):
+    enemy["HP"] -= 30
+    pass
+
+
+def damage_the_character(character, enemy):
+    character["HP"] -= 1
+    pass
+
+
+def character_get_exp(character, enemy):
+    character["EXP"] += 1
+
+
+def execute_challenge_protocol(character, current_environment):
+    print(f"you are fighting the {current_environment[0]}!")
+    enemy = {"HP": 100, "damage_range": range(50,100)}
+    while enemy_not_dead(enemy) and character_not_dead(character):
+        skill = get_user_choice(VALID_USER_INPUT_FIGHTING, USER_INPUT_MAPPING_FIGHTING_LEVEL_ONE)
+        print(skill)
+        damage_the_enemy(enemy, skill)
+        damage_the_character(character, enemy)
+    character_get_exp(character, enemy)
+    print(enemy)
 
 
 def game():
@@ -179,23 +218,23 @@ def game():
     character = make_character(name)
     board = make_board(rows, columns, character)
     achieve_goal = False
-    print_instructions(name)
+    print_intro(name)
+    print_instructions()
     while not achieve_goal:
         set_coordinate_state(board, character["coordinates"], cool_description)
         describe_current_location(board, character)
-        direction = get_user_choice()
+        direction = get_user_choice(VALID_USER_INPUT_MOVING, USER_INPUT_MAPPING_MOVING)
         if direction == "MAP":
             map_board(board, character)
             continue
         valid_move = validate_move(board, character, direction)
         if valid_move:
             set_coordinate_state(board, character["coordinates"], random_event)
-            character["coordinates"] = move_character(character, direction) # update coords
+            character["coordinates"] = move_character(character, direction)
             current_environment = describe_current_location(board, character)
             if current_environment in list(filter(is_none, list(ENVIRONMENTS))):
-                print("FIGHTING")
-                pass
-                # execute_challenge_protocol(character)
+                execute_challenge_protocol(character, current_environment)
+                print(character)
                 # if character_has_leveled():
                     # execute_glow_up_protocol() # ASCII art? congradulation message
             # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
