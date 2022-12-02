@@ -1,5 +1,3 @@
-import itertools
-import random
 from move import *
 from environments import *
 from print import *
@@ -93,15 +91,14 @@ def game():
     
 REMEMBER ANNOTATIONS
 """
-VALID_USER_INPUT_MOVING = ("1", "2", "3", "4", "5")
-USER_INPUT_MAPPING_MOVING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
-
-VALID_USER_INPUT_FIGHTING = ("1", "2", "3", "4")
-USER_INPUT_MAPPING_FIGHTING_LEVEL_ONE = ("PUNCH", "KICK", "BITE", "HEADBUTT")
+# Global constant for enumerating user choices in movement
+VALID_USER_INPUT_MOVING = (("1", "NORTH"), ("2", "EAST"), ("3", "SOUTH"), ("4", "WEST"), ("5", "MAP"))
+# Global constant for enumerating user choices in fighting
+VALID_USER_INPUT_FIGHTING_LEVEL_ONE = (("1", "PUNCH"), ("2", "KICK"), ("3", "BITE"), ("4", "HEADBUTT"))
 
 
 def make_character(name):
-    return {"name": name, "coordinates": (6, 4), "level": 2, "HP": 150, "MP": 150, "EXP": 0}
+    return {"name": name, "coordinates": (6, 4), "level": 1, "HP": 150, "MP": 150, "EXP": 0}
 
 
 def leveled_up():
@@ -120,6 +117,10 @@ def fill_board_coordinates_horizontal(board, coords, times, generate_function):
         board[pair] = generate_function
 
 
+def set_coordinate_state(board, coordinate, generate_function):
+    board[coordinate] = generate_function
+
+
 def make_board(rows, columns, character):
     """
     """
@@ -127,31 +128,21 @@ def make_board(rows, columns, character):
     for row_coordinate in range(rows):
         for pair in zip(itertools.repeat(row_coordinate, rows), range(columns)):
             board[pair] = random_event
-    fill_board_coordinates_horizontal(board, (2, 2), 5, wall)
-    fill_board_coordinates_horizontal(board, (5, 2), 5, wall)
-    fill_board_coordinates_vertical(board, (5, 3), 5, water)
-    fill_board_coordinates_vertical(board, (1, 1), 5, water)
+    # Create initial map layout here
+    fill_board_coordinates_horizontal(board, (4, 2), 2, wall)
+    fill_board_coordinates_horizontal(board, (4, 6), 2, wall)
+    fill_board_coordinates_vertical(board, (0, 2), 4, water)
+    fill_board_coordinates_vertical(board, (0, 7), 4, water)
+    set_coordinate_state(board, (0, 0), item)
     return board
 
 
-def set_coordinate_state(board, coordinate, generate_function):
-    board[coordinate] = generate_function
-
-
-def get_coordinate_state_for_map(coordinate, character):
-    # print(type(coordinate))
-    return coordinate(character)[1] if coordinate(character)[0] in OBSTACLES else '?'
-
-
 def map_board(board, character):
-    for k, v in board.items():
-        if k == character["coordinates"]:
-            print(f"[!] ", end="")
-        else:
-            print(f"[{get_coordinate_state_for_map(v, character)}] ", end="")
-        if k[1] == 9:
+    for coordinate, generate_function in board.items():
+        print(f"[{generate_function(character)[1]}] ", end="")
+        if coordinate[1] == 9:
             print("")
-    print("! = you, # = water, % = wall")
+    print("! = you, # = water, % = wall, ? = an event, @ = an item")
 
 
 def describe_current_location(board, character):
@@ -164,17 +155,16 @@ def is_none(environment):
     return environment[0] != "nothing"
 
 
-def get_user_choice(input_type, input_map):
+def get_user_choice(choice_list):
     user_input = ""
-    choices_to_print = "select your move:\n"
-    enumerated_choices = list(enumerate(input_map, 1))
-    while user_input not in input_type:
-        for choice in enumerated_choices:
+    choices_to_print = "make a selection:\n"
+    valid_input = [choice[0] for choice in choice_list]
+    while user_input not in valid_input:
+        for choice in choice_list:
             choices_to_print += f"{choice[0]}.{choice[1]}\n"
         user_input = input(choices_to_print)
-    for index, value in enumerated_choices:
-        if str(index) == user_input:
-            return value
+    input_name = [choice[1] for choice in choice_list if choice[0] == user_input]
+    return input_name[0]
 
 
 def enemy_not_dead(enemy):
@@ -203,13 +193,16 @@ def execute_challenge_protocol(character, current_environment):
     print(f"you are fighting the {current_environment[0]}!")
     enemy = {"HP": 100, "damage_range": range(50,100)}
     while enemy_not_dead(enemy) and character_not_dead(character):
-        skill = get_user_choice(VALID_USER_INPUT_FIGHTING, USER_INPUT_MAPPING_FIGHTING_LEVEL_ONE)
+        skill = get_user_choice(VALID_USER_INPUT_FIGHTING_LEVEL_ONE)
         print(skill)
         damage_the_enemy(enemy, skill)
         damage_the_character(character, enemy)
     character_get_exp(character, enemy)
     print(enemy)
 
+
+def print_obstacle_message(character, direction):
+    print(f"can't move to {move_character(character, direction)}, there is an obstacle")
 
 def game():
     rows = 10
@@ -223,7 +216,7 @@ def game():
     while not achieve_goal:
         set_coordinate_state(board, character["coordinates"], cool_description)
         describe_current_location(board, character)
-        direction = get_user_choice(VALID_USER_INPUT_MOVING, USER_INPUT_MAPPING_MOVING)
+        direction = get_user_choice(VALID_USER_INPUT_MOVING)
         if direction == "MAP":
             map_board(board, character)
             continue
@@ -240,8 +233,8 @@ def game():
             # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
                 # one of the key: value pair in character should be boss_killed : False
         else:
-            print(f"can't move to {move_character(character, direction)}, there is an obstacle")
-    print("you have finished.")
+            print_obstacle_message(character, direction)
+    print_end_of_game(name)
 
 
 def main():
