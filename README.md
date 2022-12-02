@@ -1,8 +1,8 @@
 # Baldurs_Late
-Robert Oh (A01321210)
+Robert Oh (A01321210)  
 Collin Chan (A01337496)
 
-|                                                       |     |
+| ELEMENTS                                              |     |
 |-------------------------------------------------------|-----|
 | Tuple                                                 | 000 |
 | List                                                  | 001 |
