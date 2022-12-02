@@ -9,6 +9,7 @@ The main module of our text-based adventure game.
 """
 import random
 import itertools
+import math
 
 """
 #----combat----
@@ -39,8 +40,8 @@ USER_INPUT_MOVING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
 OBSTACLES = ("wall", "table", "gate")
 
 # Global constant for enemy stats with "type" key's value corresponding to entries in the ENVIRONMENTS global constant
-ENEMY_STATS = ({"type": "weak duelist", "HP": 100, "damage range": [0, 10], "exp gained": 10},
-               {"type": "strong duelist", "HP": 150, "damage range": [10, 20], "exp gained": 20})
+ENEMY_STATS = ({"type": "weak duelist", "HP": 100, "damage range": [0, 15], "exp gained": 10},
+               {"type": "strong duelist", "HP": 150, "damage range": [20, 30], "exp gained": 20})
 
 # Global constant for random event environments
 ENVIRONMENTS = (("weak duelist", "?", "Yikes! A weak duelist approaches you"),
@@ -86,6 +87,7 @@ def make_board(rows, columns):
     set_coordinate_state(board, (0, 9), item)
     set_coordinate_state(board, (9, 9), item)
     set_coordinate_state(board, (9, 0), item)
+    set_coordinate_state(board, (6, 6), item)
     return board
 
 
@@ -114,6 +116,25 @@ def leveled_up():
     pass
 
 
+def character_get_exp(character, enemy):
+    character["CURRENT EXP"] += enemy["exp gained"]
+
+
+def handle_level_up(board, character):
+    character["CURRENT EXP"] = 0
+    character["level"] += 1
+    character["MAX HP"] = math.ceil(character["MAX HP"] * 1.5)
+    character["CURRENT HP"] = character["MAX HP"]
+    character["cards allowed"] += 1
+    if character["level"] == 3:
+        pass
+    print(f'congratulations for levelling to {character["level"]}!')
+
+
+def character_has_leveled(character):
+    return character["CURRENT EXP"] >= character["EXP TO LEVEL"]
+
+
 """
 GAME PROGRESSION RELATED FUNCTIONALITY END
 """
@@ -128,41 +149,44 @@ def effect_the_enemy(enemy, character, skill):
     skill_stat_list = [skills_stats for skills_stats in character["SKILLS"] if skills_stats["type"] == skill]
     skill_stat = skill_stat_list[0]
     print(skill_stat)
+    if "heal range" in skill_stat.keys():
+        return False
     damage = random.randint(skill_stat["damage range"][0], skill_stat["damage range"][1])
-    enemy["HP"] -= damage
-    character["CURRENT MP"] -= skill_stat["MP cost"]
-    print(f"the duelist received {damage} damage to their lifepoints!")
+    enemy["HP"] = max(enemy["HP"] - damage, 0)
+    print(damage)
+    print(f'You chose to attack with {skill_stat["type"]}!')
+    print(f'The opposing duelist received {damage} damage to their lifepoints! '
+          f'Their lifepoints are now: {enemy["HP"]}')
+    return enemy["HP"] <= 0
 
 
 def effect_the_character(enemy, character, skill):
+    skill_stat_list = [skills_stats for skills_stats in character["SKILLS"] if skills_stats["type"] == skill]
+    skill_stat = skill_stat_list[0]
+    print(skill_stat)
+    if "heal range" in skill_stat.keys():
+        health_gained = random.randint(skill_stat["heal range"][0], skill_stat["heal range"][1])
+        character["CURRENT HP"] = min(character["CURRENT HP"] + health_gained, character["MAX HP"])
+        print(f'You chose to heal with {skill_stat["type"]}!\n')
+        print(f'You healed {health_gained} lifepoints! '
+              f'Your lifepoints are now: {character["CURRENT HP"]}')
     damage = random.randint(enemy["damage range"][0], enemy["damage range"][1])
     print(damage)
-    character["CURRENT HP"] -= damage
-    print(f'you received {damage} damage to your lifepoints! Your current lifepoints are: {character["CURRENT HP"]}')
-
-
-def character_get_exp(character, enemy):
-    character["CURRENT EXP"] += enemy["exp gained"]
-
-
-def handle_level_up(character):
-    character["CURRENT EXP"] = 0
-    character["level"] += 1
-    print(f'congratulations for levelling to {character["level"]}')
-
-
-def character_has_leveled(character):
-    return character["CURRENT EXP"] >= character["EXP TO LEVEL"]
+    character["CURRENT HP"] = max(character["CURRENT HP"] - damage, 0)
+    print(f'The opposing duelist prepares an attack!\n')
+    print(f'you received {damage} damage to your lifepoints! '
+          f'Your current lifepoints are: {character["CURRENT HP"]}')
 
 
 def execute_challenge_protocol(character, current_environment):
-    print(f"you are fighting the {current_environment[0]}!")
+    print(f"you are fighting a {current_environment[0]}!")
     enemy_stats_list = [enemy_with_stats for enemy_with_stats in ENEMY_STATS if enemy_with_stats["type"] == current_environment[0]]
     enemy = enemy_stats_list[0]
-    while enemy["HP"] >= 0 and is_alive(character):
+    while is_alive(character):
         skill_choices = random.sample(USER_INPUT_FIGHTING, character["cards allowed"])
         skill = get_user_choice(skill_choices)
-        effect_the_enemy(enemy, character, skill)
+        if effect_the_enemy(enemy, character, skill):
+            break
         effect_the_character(enemy, character, skill)
         print(character)
         print(enemy)
@@ -189,8 +213,10 @@ def random_event(character):
 
 
 def cool_description(_):
-    return random.choice([("", "!", "The musty ground envelops you"), ("", "!", "The dark air is suffocating"),
-                          ("", "!", "You can't see through this fog"), ("", "!", "You smell rotting flesh")])
+    return random.choice([("", "!", "You feel the cool air in the convention center"),
+                          ("", "!", "The sound of duelists is deafening"),
+                          ("", "!", "There are people everywhere"),
+                          ("", "!", "There are duels going on eveywhere")])
 
 
 def gate(_):
@@ -301,7 +327,7 @@ CHARACTER RELATED FUNCTIONALITY START
 
 
 def is_alive(character):
-    return character["CURRENT HP"] >= 0
+    return character["CURRENT HP"] > 0
 
 
 def update_character_status(character):
@@ -320,7 +346,7 @@ def make_character(name):
                 {"type": "KURIBOH", "heal range": [20, 50]},
                 {"type": "DARK MAGICIAN GIRL", "damage range": [50, 150]}
             )
-    }
+            }
 
 
 # Global constant for enumerating user choices in duels, a random subset will be chosen in a battle
@@ -378,7 +404,7 @@ def game():
                 execute_challenge_protocol(character, current_environment)
                 print(character)
                 if character_has_leveled(character):
-                    handle_level_up(character)
+                    handle_level_up(board, character)
             # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
                 # one of the key: value pair in character should be boss_killed : False
         else:
