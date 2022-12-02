@@ -4,7 +4,6 @@ Collin Chan (A01337496)
 
 
 | Tuple                                                 | 000 |
-|-------------------------------------------------------|-----|
 | List                                                  | 001 |
 | An example of a dictionary or list comprehension      | 100 |
 | A remarkable use of selection using the if-statement  | 111 |
@@ -15,5 +14,3 @@ Collin Chan (A01337496)
 | the enumerate function                                | 000 |
 | the filter or map function                            | 000 |
 | the random module                                     | 000 |
-|                                                       |     |
-|                                                       |     |
