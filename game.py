@@ -34,19 +34,18 @@ REMEMBER ANNOTATIONS
 
 # Global constant for enumerating user choices in movement
 USER_INPUT_MOVING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
-# Global constants for enumerating user choices in fighting
-USER_INPUT_FIGHTING_LEVEL_ONE = ("PUNCH", "KICK", "ICE BOLT")
-USER_INPUT_FIGHTING_LEVEL_TWO = ("PUNCH", "KICK", "ICE BOLT", "FIREBALL")
-USER_INPUT_FIGHTING_LEVEL_THREE = ("PUNCH", "KICK", "ICE BOLT", "FIREBALL", "WORLD ENDER")
-# Global constant for obstacle environments
-OBSTACLES = ("wall", "water")
-# Global constant for enemy stats with "type" key's value coming from the entries in the ENVIRONMENTS global constant
-ENEMY_STATS = ({"type": "bat", "HP": 100, "damage range": [0, 10], "exp gained": 10},
-               {"type": "goblin", "HP": 150, "damage range": [10, 20], "exp gained": 25})
+
+# Global constant used for obstacle environment detection
+OBSTACLES = ("wall", "table", "gate")
+
+# Global constant for enemy stats with "type" key's value corresponding to entries in the ENVIRONMENTS global constant
+ENEMY_STATS = ({"type": "weak duelist", "HP": 100, "damage range": [0, 10], "exp gained": 10},
+               {"type": "strong duelist", "HP": 150, "damage range": [10, 20], "exp gained": 20})
+
 # Global constant for random event environments
-ENVIRONMENTS = (("bat", "?", "A weak bat flutters around you"),
-                ("goblin", "?", "A ferocious goblin sees you"),
-                ("nothing", "?", "There is nothing here"))
+ENVIRONMENTS = (("weak duelist", "?", "Yikes! A weak duelist approaches you"),
+                ("strong duelist", "?", "Oh no! A strong duelist approaches you"),
+                ("nothing", "?", "There is nothing here, phew"))
 
 
 """
@@ -77,12 +76,16 @@ def make_board(rows, columns):
     for row_coordinate in range(rows):
         for pair in zip(itertools.repeat(row_coordinate, rows), range(columns)):
             board[pair] = random_event
-    # Create initial map layout here
+    # Create initial map layout here with items, walls, and water
     fill_board_coordinates_horizontal(board, (4, 2), 2, wall)
     fill_board_coordinates_horizontal(board, (4, 6), 2, wall)
     fill_board_coordinates_vertical(board, (0, 2), 4, water)
     fill_board_coordinates_vertical(board, (0, 7), 4, water)
+    fill_board_coordinates_horizontal(board, (4, 4), 2, gate)
     set_coordinate_state(board, (0, 0), item)
+    set_coordinate_state(board, (0, 9), item)
+    set_coordinate_state(board, (9, 9), item)
+    set_coordinate_state(board, (9, 0), item)
     return board
 
 
@@ -92,7 +95,7 @@ def map_board(board, character):
         print(f"[{generate_function(character)[1]}] ", end="")
         if coordinate[1] == 9:
             print("")
-    print("Legend: ! = you, # = water, % = wall, ? = an event, @ = an item\n")
+    print("LEGEND: ! = you, # = table, % = wall, - = gate, ? = unknown, @ = piece of exodia\n")
 
 
 """
@@ -106,6 +109,8 @@ GAME PROGRESSION RELATED FUNCTIONALITY START
 
 
 def leveled_up():
+    # increase cards allowed
+    # revive hitpoints
     pass
 
 
@@ -119,19 +124,21 @@ COMBAT RELATED FUNCTIONALITY START
 """
 
 
-def damage_the_enemy(enemy, character, skill):
+def effect_the_enemy(enemy, character, skill):
     skill_stat_list = [skills_stats for skills_stats in character["SKILLS"] if skills_stats["type"] == skill]
     skill_stat = skill_stat_list[0]
     print(skill_stat)
     damage = random.randint(skill_stat["damage range"][0], skill_stat["damage range"][1])
     enemy["HP"] -= damage
     character["CURRENT MP"] -= skill_stat["MP cost"]
+    print(f"the duelist received {damage} damage to their lifepoints!")
 
 
-def damage_the_character(character, enemy):
+def effect_the_character(enemy, character, skill):
     damage = random.randint(enemy["damage range"][0], enemy["damage range"][1])
     print(damage)
     character["CURRENT HP"] -= damage
+    print(f'you received {damage} damage to your lifepoints! Your current lifepoints are: {character["CURRENT HP"]}')
 
 
 def character_get_exp(character, enemy):
@@ -153,9 +160,10 @@ def execute_challenge_protocol(character, current_environment):
     enemy_stats_list = [enemy_with_stats for enemy_with_stats in ENEMY_STATS if enemy_with_stats["type"] == current_environment[0]]
     enemy = enemy_stats_list[0]
     while enemy["HP"] >= 0 and is_alive(character):
-        skill = get_user_choice(USER_INPUT_FIGHTING_LEVEL_ONE)
-        damage_the_enemy(enemy, character, skill)
-        damage_the_character(character, enemy)
+        skill_choices = random.sample(USER_INPUT_FIGHTING, character["cards allowed"])
+        skill = get_user_choice(skill_choices)
+        effect_the_enemy(enemy, character, skill)
+        effect_the_character(enemy, character, skill)
         print(character)
         print(enemy)
     character_get_exp(character, enemy)
@@ -185,20 +193,24 @@ def cool_description(_):
                           ("", "!", "You can't see through this fog"), ("", "!", "You smell rotting flesh")])
 
 
+def gate(_):
+    return "gate", "-", "A gate towers over you"
+
+
 def wall(_):
     return "wall", "%", "A wall towers over you"
 
 
 def water(_):
-    return "water", "#", "A large body of water"
+    return "table", "#", "A large table"
 
 
 def item(_):
-    return "item", "@", "You see a item to help your adventures"
+    return "item", "@", "You have found a piece of exodia!"
 
 
 def final_boss(_):
-    return "boss", "@", "The final boss is menacing"
+    return "boss", "@", "Uh oh. Mr. Pegasus moves towards you..."
 
 
 """
@@ -244,14 +256,21 @@ PRINTING RELATED FUNCTIONALITY START
 
 
 def get_character_name():
-    return input("State your name foolish human\nYour reply: ")
+    return input("State your name duelist\nYour reply: \n")
 
 
 def print_intro(name):
     print(f"\nHello, {name}.\n"
-          f"It seems you are trapped in this dungeon until you can defeat me.\n"
-          f"I will be waiting for you when the time has come (i.e., you reach level 3)\n"
-          f"Sincerely, Baldur\n")
+          f"It seems like you have signed up for this major dueling tournament\n"
+          f"I'm the coordinator for this event\n"
+          f"Oh, you don't know anything about that, you say? Well, that's too bad.\n"
+          f"Your only way out of here is to beat the omega duelist 'Maximillion Pegasus'\n"
+          f"I heard his deck is straight sick and you can't beat him conventionally\n"
+          f"You probably have to find some cheat cards to bring him down\n"
+          f"I've been hearing about these exodia cards that are busted\n"
+          f"No duelist has ever been able to get all five, though.\n"
+          f"Anyway, I won't bother you any longer. You probably have duels to attend to\n"
+          f"Good luck. And may the heart of the cards be with you\n")
 
 
 def print_instructions():
@@ -291,15 +310,24 @@ def update_character_status(character):
 
 def make_character(name):
     return {"name": name, "coordinates": (6, 4), "level": 1, "CURRENT HP": 150,
-            "MAX HP": 150, "CURRENT MP": 150, "MP": 150, "CURRENT EXP": 0, "EXP TO LEVEL": 150,
+            "MAX HP": 150, "cards allowed": 3, "CURRENT EXP": 0, "EXP TO LEVEL": 150,
             "SKILLS": (
-                {"type": "PUNCH", "MP cost": 0, "damage range": [5, 10]},
-                {"type": "KICK", "MP cost": 0, "damage range": [10, 20]},
-                {"type": "ICE BOLT", "MP cost": 50, "damage range": [50, 100]},
-                {"type": "FIREBALL", "MP cost": 60, "damage range": [50, 150]}
+                {"type": "DARK MAGICIAN", "damage range": [10, 30]},
+                {"type": "BLUE-EYES WHITE DRAGON", "damage range": [100, 150]},
+                {"type": "RED-EYES BLACK DRAGON", "damage range": [50, 100]},
+                {"type": "GOBLIN'S SECRET REMEDY", "heal range": [50, 100]},
+                {"type": "BLUE-EYES ULTIMATE DRAGON", "damage range": [9999, 9999]},
+                {"type": "KURIBOH", "heal range": [20, 50]},
+                {"type": "DARK MAGICIAN GIRL", "damage range": [50, 150]}
             )
-            }
+    }
 
+
+# Global constant for enumerating user choices in duels, a random subset will be chosen in a battle
+USER_INPUT_FIGHTING = ("DARK MAGICIAN", "BLUE-EYES WHITE DRAGON", "GOBLIN'S SECRET REMEDY",
+                       "RED-EYES BLACK DRAGON", "DARK MAGICIAN GIRL", "BLUE-EYES ULTIMATE DRAGON",
+                       "KURIBOH"
+                       )
 
 """
 CHARACTER RELATED FUNCTIONALITY END
