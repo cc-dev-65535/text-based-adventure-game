@@ -1,3 +1,4 @@
+import random
 from move import *
 from environments import *
 from print import *
@@ -5,6 +6,11 @@ from print import *
 """
 Robert Oh
 A01321210
+
+Collin Chan
+A01337496
+
+The main module of our text-based adventure game.
 """
 #MORE NOTES
 #describe current location returns
@@ -92,13 +98,21 @@ def game():
 REMEMBER ANNOTATIONS
 """
 # Global constant for enumerating user choices in movement
-VALID_USER_INPUT_MOVING = (("1", "NORTH"), ("2", "EAST"), ("3", "SOUTH"), ("4", "WEST"), ("5", "MAP"))
+USER_INPUT_MOVING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
 # Global constant for enumerating user choices in fighting
-VALID_USER_INPUT_FIGHTING_LEVEL_ONE = (("1", "PUNCH"), ("2", "KICK"), ("3", "BITE"), ("4", "HEADBUTT"))
+USER_INPUT_FIGHTING_LEVEL_ONE = ("PUNCH", "KICK", "ICE BOLT")
+# Global constant for enemy stats with "type" key's value coming from the entries in the ENVIRONMENTS global constant
+ENEMY_STATS = ({"type": "bat", "HP": 100, "damage range": [0, 10], "exp gained": 10},
+               {"type": "goblin", "HP": 150, "damage range": [10, 20], "exp gained": 25})
+SKILLS = ({"type": "PUNCH", "MP cost": 0, "damage range": [5, 10]},
+            {"type": "KICK", "MP cost": 0, "damage range": [10, 20]},
+            {"type": "ICE BOLT", "MP cost": 50, "damage range": [50, 100]},
+          {"type": "FIREBALL", "MP cost": 60, "damage range": [50, 150]})
 
 
 def make_character(name):
-    return {"name": name, "coordinates": (6, 4), "level": 1, "HP": 150, "MP": 150, "EXP": 0}
+    return {"name": name, "coordinates": (6, 4), "level": 1, "CURRENT HP": 150,
+            "MAX HP": 150, "CURRENT MP": 150, "MP": 150, "CURRENT EXP": 0, "EXP TO LEVEL": 150}
 
 
 def leveled_up():
@@ -158,51 +172,67 @@ def is_none(environment):
 def get_user_choice(choice_list):
     user_input = ""
     choices_to_print = "make a selection:\n"
-    valid_input = [choice[0] for choice in choice_list]
+    enumerated_choices = list(enumerate(choice_list, 1))
+    valid_input = [str(choice[0]) for choice in enumerated_choices]
     while user_input not in valid_input:
-        for choice in choice_list:
+        for choice in enumerated_choices:
             choices_to_print += f"{choice[0]}.{choice[1]}\n"
-        user_input = input(choices_to_print)
-    input_name = [choice[1] for choice in choice_list if choice[0] == user_input]
+        user_input = input(f"{choices_to_print}\n")
+        choices_to_print = "invalid input, make another selection:\n"
+    input_name = [choice[1] for choice in enumerated_choices if str(choice[0]) == user_input]
+    # print(input_name)
     return input_name[0]
 
 
-def enemy_not_dead(enemy):
-    return enemy["HP"] >= 0
+def is_alive(character):
+    return character["CURRENT HP"] >= 0
 
 
-def character_not_dead(character):
-    return character["HP"] >= 0
-
-
-def damage_the_enemy(enemy, skill):
-    enemy["HP"] -= 30
-    pass
+def damage_the_enemy(enemy, character, skill):
+    skill_stat_list = [skills_stats for skills_stats in SKILLS if skills_stats["type"] == skill]
+    skill_stat = skill_stat_list[0]
+    print(skill_stat)
+    damage = random.randint(skill_stat["damage range"][0], skill_stat["damage range"][1])
+    enemy["HP"] -= damage
+    character["CURRENT MP"] -= skill_stat["MP cost"]
 
 
 def damage_the_character(character, enemy):
-    character["HP"] -= 1
-    pass
+    damage = random.randint(enemy["damage range"][0], enemy["damage range"][1])
+    print(damage)
+    character["CURRENT HP"] -= damage
 
 
 def character_get_exp(character, enemy):
-    character["EXP"] += 1
+    character["CURRENT EXP"] += enemy["exp gained"]
+
+
+def handle_level_up(character):
+    character["CURRENT EXP"] = 0
+    character["level"] += 1
+    print(f'congratulations for levelling to {character["level"]}')
+
+
+def character_has_leveled(character):
+    return character["CURRENT EXP"] >= character["EXP TO LEVEL"]
 
 
 def execute_challenge_protocol(character, current_environment):
     print(f"you are fighting the {current_environment[0]}!")
-    enemy = {"HP": 100, "damage_range": range(50,100)}
-    while enemy_not_dead(enemy) and character_not_dead(character):
-        skill = get_user_choice(VALID_USER_INPUT_FIGHTING_LEVEL_ONE)
-        print(skill)
-        damage_the_enemy(enemy, skill)
+    enemy_stats_list = [enemy_with_stats for enemy_with_stats in ENEMY_STATS if enemy_with_stats["type"] == current_environment[0]]
+    enemy = enemy_stats_list[0]
+    while enemy["HP"] >= 0 and is_alive(character):
+        skill = get_user_choice(USER_INPUT_FIGHTING_LEVEL_ONE)
+        damage_the_enemy(enemy, character, skill)
         damage_the_character(character, enemy)
+        print(character)
+        print(enemy)
     character_get_exp(character, enemy)
-    print(enemy)
 
 
 def print_obstacle_message(character, direction):
     print(f"can't move to {move_character(character, direction)}, there is an obstacle")
+
 
 def game():
     rows = 10
@@ -213,10 +243,10 @@ def game():
     achieve_goal = False
     print_intro(name)
     print_instructions()
-    while not achieve_goal:
+    while not achieve_goal and is_alive(character):
         set_coordinate_state(board, character["coordinates"], cool_description)
         describe_current_location(board, character)
-        direction = get_user_choice(VALID_USER_INPUT_MOVING)
+        direction = get_user_choice(USER_INPUT_MOVING)
         if direction == "MAP":
             map_board(board, character)
             continue
@@ -228,8 +258,8 @@ def game():
             if current_environment in list(filter(is_none, list(ENVIRONMENTS))):
                 execute_challenge_protocol(character, current_environment)
                 print(character)
-                # if character_has_leveled():
-                    # execute_glow_up_protocol() # ASCII art? congradulation message
+                if character_has_leveled(character):
+                    handle_level_up(character)
             # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
                 # one of the key: value pair in character should be boss_killed : False
         else:
