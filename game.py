@@ -12,25 +12,7 @@ import itertools
 import copy
 import sys
 
-"""
-#----combat----
-#combat()
-#intiative()
-#combat_victory()
-#hit_detection() # rng calculation according to stats
-
-    for rows in rows:
-        for column in columns:
-            # board[(row,column)] = ["Welcome to this room", None]
-            # roll rng, assign challenge according to roll dice
-
-    # return dictionary:
-        # key: coordinate tuple
-        # value: list [string that describes location, event/character to interact, [choices1, choices2]]
-        
-def describe_current_location(board, character):
-    # read board location and character, print out
-    
+""" 
 REMEMBER ANNOTATIONS
 """
 
@@ -51,23 +33,23 @@ BOARD RELATED FUNCTIONALITY START
 """
 
 
-def fill_board_coordinates_vertical(board, coords, times, generate_function) -> None:
+def fill_board_coordinates_vertical(board: dict, coords: tuple, times: int, generate_function) -> None:
     (start_x, start_y) = coords
     for pair in zip(range(start_x, start_x + times), itertools.repeat(start_y, times)):
         board[pair] = generate_function
 
 
-def fill_board_coordinates_horizontal(board, coords, times, generate_function):
+def fill_board_coordinates_horizontal(board: dict, coords: tuple, times: int, generate_function) -> None:
     (start_x, start_y) = coords
     for pair in zip(itertools.repeat(start_x, times), range(start_y, start_y + times)):
         board[pair] = generate_function
 
 
-def set_coordinate_state(board, coordinate, generate_function):
+def set_coordinate_state(board: dict, coordinate: tuple, generate_function) -> None:
     board[coordinate] = generate_function
 
 
-def make_board(rows, columns):
+def make_board(rows: int, columns: int) -> dict:
     """
     """
     board = {}
@@ -86,15 +68,15 @@ def make_board(rows, columns):
     fill_board_coordinates_horizontal(board, (3, 4), 2, door)
     fill_board_coordinates_horizontal(board, (1, 4), 2, table)
     set_coordinate_state(board, (0, 4), final_boss)
-    set_coordinate_state(board, (0, 0), item)
-    set_coordinate_state(board, (0, 9), item)
+    set_coordinate_state(board, (0, 1), item)
+    set_coordinate_state(board, (3, 9), item)
     set_coordinate_state(board, (9, 9), item)
-    set_coordinate_state(board, (9, 0), item)
+    set_coordinate_state(board, (9, 3), item)
     set_coordinate_state(board, (6, 5), item)
     return board
 
 
-def map_board(board, character):
+def map_board(board: dict, character: dict) -> None:
     print("\nMAP OF CONVENTION CENTRE:")
     for coordinate, generate_function in board.items():
         print(f"[{generate_function(character)[1]}] ", end="")
@@ -114,11 +96,19 @@ GAME PROGRESSION RELATED FUNCTIONALITY START
 """
 
 
-def character_get_exp(character, enemy):
+def item_obtained(character: dict) -> None:
+    character["exodia pieces"] += 1
+    if character["exodia pieces"] >= 5:
+        character["SKILLS"].append({"type": "EXODIA THE FORBIDDEN ONE", "damage range": [999999, 999999]})
+        print(f"You have assembled the forbidden one\n"
+              f"The power of exodia makes you feel invincible...\n")
+
+
+def character_get_exp(character: dict, enemy: dict) -> None:
     character["CURRENT EXP"] += enemy["exp gained"]
 
 
-def handle_level_up(board, character):
+def handle_level_up(board: dict, character: dict) -> None:
     character["CURRENT EXP"] = 0
     character["level"] += 1
     character["MAX HP"] = character["level"] * 100
@@ -127,9 +117,10 @@ def handle_level_up(board, character):
     if character["level"] == 3:
         fill_board_coordinates_horizontal(board, (3, 4), 2, random_event)
     print(f'Congratulations on leveling to level {character["level"]}!')
+    print(f"...You feel like you are attracting more attention from the other duelists")
 
 
-def character_has_leveled(character):
+def character_has_leveled(character: dict) -> bool:
     return character["CURRENT EXP"] >= character["EXP TO LEVEL"]
 
 
@@ -143,7 +134,7 @@ COMBAT RELATED FUNCTIONALITY START
 """
 
 
-def effect_the_enemy(enemy, character, skill):
+def effect_the_enemy(enemy: dict, character: dict, skill: str) -> bool:
     skill_stat_list = [skills_stats for skills_stats in character["SKILLS"] if skills_stats["type"] == skill]
     skill_stat = skill_stat_list[0]
     print(skill_stat)
@@ -160,7 +151,7 @@ def effect_the_enemy(enemy, character, skill):
     return enemy["HP"] <= 0
 
 
-def effect_the_character(enemy, character, skill):
+def effect_the_character(enemy: dict, character: dict, skill: str) -> None:
     skill_stat_list = [skills_stats for skills_stats in character["SKILLS"] if skills_stats["type"] == skill]
     skill_stat = skill_stat_list[0]
     print(skill_stat)
@@ -178,14 +169,27 @@ def effect_the_character(enemy, character, skill):
           f'Your current lifepoints are: {character["CURRENT HP"]}')
 
 
-def execute_challenge_protocol(character, current_environment, enemies):
-    print(f"you are fighting a {current_environment[0]}!")
+def update_boss_status(enemy: dict) -> None:
+    enemy["damage range"] = [50, 100]
+
+
+def execute_challenge_protocol(character: dict, current_environment: tuple, enemies: tuple) -> None:
     enemy_stats_list = [enemy_stats for enemy_stats in enemies if enemy_stats["type"] == current_environment[0]]
     enemy = copy.copy(enemy_stats_list[0])
+    list_of_skills = list(USER_INPUT_FIGHTING)
+    if (current_environment[0] == "boss") and (character["exodia pieces"] >= 5):
+        list_of_skills.append("EXODIA THE FORBIDDEN ONE")
+        update_boss_status(enemy)
+        print(f"Pegasus seems weary of your deck... This is your chance!\n"
+              f"This is the duel of your life! Only one card can help you!")
+    else:
+        print(f"you are fighting a {current_environment[0]}!")
     while is_alive(character):
-        skill_choices = random.sample(USER_INPUT_FIGHTING, character["cards allowed"])
+        skill_choices = random.sample(list_of_skills, character["cards allowed"])
         skill = get_user_choice(skill_choices)
         if effect_the_enemy(enemy, character, skill):
+            if current_environment[0] == "boss":
+                character["boss killed"] = True
             break
         effect_the_character(enemy, character, skill)
         print(character)
@@ -193,7 +197,7 @@ def execute_challenge_protocol(character, current_environment, enemies):
     character_get_exp(character, enemy)
 
 
-def enemies_init():
+def enemies_init() -> tuple:
     return ({"type": "weak duelist", "HP": 100, "damage range": [0, 15], "exp gained": 10},
             {"type": "strong duelist", "HP": 150, "damage range": [20, 30], "exp gained": 20},
             {"type": "boss", "HP": 100000, "damage range": [9000, 10000], "exp gained": 20})
@@ -209,7 +213,7 @@ BOARD ENVIRONMENT RELATED FUNCTIONALITY START
 """
 
 
-def random_event(character):
+def random_event(character: dict) -> tuple:
     weak_enemies_list = list(itertools.repeat(ENVIRONMENTS[0], character["level"]))
     strong_enemies_list = list(itertools.repeat(ENVIRONMENTS[1], character["level"] * 2))
     none_list = list(itertools.repeat(ENVIRONMENTS[2], 5))
@@ -218,31 +222,31 @@ def random_event(character):
     return random.choice(scaled_environment_list)
 
 
-def cool_description(_):
+def cool_description(_) -> tuple:
     return random.choice([("", "!", "You feel the cool air in the convention center"),
                           ("", "!", "The sound of duelists is deafening"),
                           ("", "!", "There are people everywhere"),
                           ("", "!", "There are duels going on eveywhere")])
 
 
-def door(_):
+def door(_) -> tuple:
     return "door", "-", "A door towers over you"
 
 
-def wall(_):
+def wall(_) -> tuple:
     return "wall", "%", "A wall towers over you"
 
 
-def table(_):
+def table(_) -> tuple:
     return "table", "#", "A large table"
 
 
-def item(_):
+def item(_) -> tuple:
     return "item", "@", "You have found a piece of exodia!"
 
 
-def final_boss(_):
-    return "boss", "$", "Uh oh. Maximillion Pegasus moves towards you..."
+def final_boss(_) -> tuple:
+    return "boss", "$", "Uh oh. Maximillion Pegasus strides towards you..."
 
 
 """
@@ -255,7 +259,7 @@ MOVEMENT RELATED FUNCTIONALITY START
 """
 
 
-def move_character(character, direction) -> tuple[int, int]:
+def move_character(character: dict, direction: str) -> tuple[int, int]:
     new_coordinates = ()
     (x, y) = character["coordinates"]
     if direction == "SOUTH":
@@ -269,7 +273,7 @@ def move_character(character, direction) -> tuple[int, int]:
     return new_coordinates
 
 
-def validate_move(board, character, direction):
+def validate_move(board: dict, character: dict, direction: str) -> bool:
     coordinates_moved = move_character(character, direction)
     if (coordinates_moved not in board.keys()) or (board[coordinates_moved](character)[0] in OBSTACLES):
         return False
@@ -286,11 +290,11 @@ PRINTING RELATED FUNCTIONALITY START
 """
 
 
-def get_character_name():
+def get_character_name() -> str:
     return input("State your name, duelist\nYour reply: \n")
 
 
-def print_intro(name):
+def print_intro(name: str) -> None:
     print(f"\nHello, {name}.\n"
           f"It seems like you have signed up for this major dueling tournament\n"
           f"I'm the coordinator for this event\n"
@@ -304,29 +308,29 @@ def print_intro(name):
           f"Good luck. And may the heart of the cards be with you\n")
 
 
-def print_instructions():
+def print_instructions() -> None:
     print(f"You will be approached by duelists while moving through the convention center\n"
           f"Select cards from your deck to defeat them. Some cards have healing effects. These are important!\n"
           f"The doors to Maximillion Pegasus's room will open when you reach level 3\n"
           f"Be warned that you will need a special weapon to defeat him\n")
 
 
-def print_end_of_game(name):
+def print_end_of_game(name: str) -> None:
     print(f"you have finished, {name}!")
 
 
-def print_obstacle_message(character, direction):
+def print_obstacle_message(character: dict, direction: str) -> None:
     print(f"can't move to {move_character(character, direction)}, there is an obstacle")
 
 
-def print_death_message():
+def print_death_message() -> None:
     print(f"You collapse to the floor in a daze\n"
           f"It seems you don't have what it takes to hang with these guys\n"
           f"RIP")
     sys.exit()
 
 
-def describe_current_location(board, character):
+def describe_current_location(board: dict, character: dict):
     environment = board[character["coordinates"]](character)
     print(f"{environment[2]}, you are at {character['coordinates']}\n")
     return environment
@@ -341,19 +345,19 @@ CHARACTER RELATED FUNCTIONALITY START
 """
 
 
-def item_obtained(character):
-    character["exodia pieces"] += 1
+def boss_dead(character: dict) -> bool:
+    return character["boss killed"]
 
 
-def is_alive(character):
+def is_alive(character: dict) -> bool:
     return character["CURRENT HP"] > 0
 
 
-def make_character(name):
+def make_character(name: str) -> dict:
     return {"name": name, "coordinates": (6, 4), "level": 1, "CURRENT HP": 100,
-            "MAX HP": 100, "cards allowed": 2, "CURRENT EXP": 0, "EXP TO LEVEL": 150,
-            "exodia pieces": 0, "boss dead": False,
-            "SKILLS": (
+            "MAX HP": 100, "cards allowed": 3, "CURRENT EXP": 0, "EXP TO LEVEL": 150,
+            "exodia pieces": 0, "boss killed": False,
+            "SKILLS": [
                 {"type": "DARK MAGICIAN", "damage range": [10, 30]},
                 {"type": "BLUE-EYES WHITE DRAGON", "damage range": [100, 150]},
                 {"type": "RED-EYES BLACK DRAGON", "damage range": [50, 100]},
@@ -363,12 +367,12 @@ def make_character(name):
                 {"type": "DARK MAGICIAN GIRL", "damage range": [50, 150]},
                 {"type": "SCAPEGOAT", "heal range": [10, 50]},
                 {"type": "JINZO", "damage range": [0, 150]},
-                {"type": "DIAN KETO THE CURE MASTER", "heal range":[1000, 1500]},
-                {"type": "CELTIC GUARDIAN", "damage range":[5, 20]},
+                {"type": "DIAN KETO THE CURE MASTER", "heal range": [1000, 1500]},
+                {"type": "CELTIC GUARDIAN", "damage range": [5, 20]},
                 {"type": "MAN-EATER BUG", "damage range": [0, 20]},
                 {"type": "BUSTER BLADER", "damage range": [50, 80]},
                 {"type": "TOON WIZARD", "damage range": [0, 40]}
-            )
+            ]
             }
 
 
@@ -384,15 +388,15 @@ CHARACTER RELATED FUNCTIONALITY END
 """
 
 
-def quit_game():
+def quit_game() -> None:
     sys.exit()
 
 
-def is_none(environment):
+def is_none(environment: tuple) -> bool:
     return environment[0] != "nothing"
 
 
-def get_user_choice(choice_list):
+def get_user_choice(choice_list: tuple):
     user_input = ""
     choices_to_print = "make a selection:\n"
     enumerated_choices = list(enumerate(choice_list, 1))
@@ -407,17 +411,16 @@ def get_user_choice(choice_list):
     return input_name[0]
 
 
-def game():
+def game() -> None:
     rows = 10
     columns = 10
     enemies = enemies_init()
     name = get_character_name()
     character = make_character(name)
     board = make_board(rows, columns)
-    achieve_goal = False
     print_intro(name)
     print_instructions()
-    while not achieve_goal and is_alive(character):
+    while not boss_dead(character):
         set_coordinate_state(board, character["coordinates"], cool_description)
         describe_current_location(board, character)
         direction = get_user_choice(USER_INPUT_MOVING)
@@ -435,7 +438,7 @@ def game():
                 item_obtained(character)
                 print(character)
                 continue
-            if current_environment in list(filter(is_none, list(ENVIRONMENTS))):
+            if (current_environment in list(filter(is_none, list(ENVIRONMENTS)))) or (current_environment[0] == "boss"):
                 execute_challenge_protocol(character, current_environment, enemies)
                 print(character)
                 if not is_alive(character):
@@ -443,14 +446,12 @@ def game():
                 print(f"Nice victory, {name}!")
                 if character_has_leveled(character):
                     handle_level_up(board, character)
-            # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
-                # one of the key: value pair in character should be boss_killed : False
         else:
             print_obstacle_message(character, direction)
     print_end_of_game(name)
 
 
-def main():
+def main() -> None:
     """
     Drives the program.
     """
