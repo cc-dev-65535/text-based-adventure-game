@@ -9,7 +9,7 @@ The main module of our text-based adventure game.
 """
 import random
 import itertools
-import math
+import copy
 import sys
 
 """
@@ -35,14 +35,10 @@ REMEMBER ANNOTATIONS
 """
 
 # Global constant for enumerating user choices in movement
-USER_INPUT_MOVING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP")
+USER_INPUT_MOVING = ("NORTH", "EAST", "SOUTH", "WEST", "MAP", "QUIT")
 
 # Global constant used for obstacle environment detection
-OBSTACLES = ("wall", "table", "gate")
-
-# Global constant for enemy stats with "type" key's value corresponding to entries in the ENVIRONMENTS global constant
-ENEMY_STATS = ({"type": "weak duelist", "HP": 100, "damage range": [0, 15], "exp gained": 10},
-               {"type": "strong duelist", "HP": 150, "damage range": [20, 30], "exp gained": 20})
+OBSTACLES = ("wall", "table", "door")
 
 # Global constant for random event environments
 ENVIRONMENTS = (("weak duelist", "?", "Yikes! A weak duelist approaches you"),
@@ -154,6 +150,7 @@ def effect_the_enemy(enemy, character, skill):
     if "heal range" in skill_stat.keys():
         return False
     damage = random.randint(skill_stat["damage range"][0], skill_stat["damage range"][1])
+    print(enemy["HP"])
     print(max(enemy["HP"] - damage, 0))
     enemy["HP"] = max(enemy["HP"] - damage, 0)
     print(damage)
@@ -181,10 +178,10 @@ def effect_the_character(enemy, character, skill):
           f'Your current lifepoints are: {character["CURRENT HP"]}')
 
 
-def execute_challenge_protocol(character, current_environment):
+def execute_challenge_protocol(character, current_environment, enemies):
     print(f"you are fighting a {current_environment[0]}!")
-    enemy_stats_list = [enemy_with_stats for enemy_with_stats in ENEMY_STATS if enemy_with_stats["type"] == current_environment[0]]
-    enemy = enemy_stats_list[0]
+    enemy_stats_list = [enemy_stats for enemy_stats in enemies if enemy_stats["type"] == current_environment[0]]
+    enemy = copy.copy(enemy_stats_list[0])
     while is_alive(character):
         skill_choices = random.sample(USER_INPUT_FIGHTING, character["cards allowed"])
         skill = get_user_choice(skill_choices)
@@ -194,6 +191,12 @@ def execute_challenge_protocol(character, current_environment):
         print(character)
         print(enemy)
     character_get_exp(character, enemy)
+
+
+def enemies_init():
+    return ({"type": "weak duelist", "HP": 100, "damage range": [0, 15], "exp gained": 10},
+            {"type": "strong duelist", "HP": 150, "damage range": [20, 30], "exp gained": 20},
+            {"type": "boss", "HP": 100000, "damage range": [9000, 10000], "exp gained": 20})
 
 
 """
@@ -253,7 +256,6 @@ MOVEMENT RELATED FUNCTIONALITY START
 
 
 def move_character(character, direction) -> tuple[int, int]:
-    update_character_status(character)
     new_coordinates = ()
     (x, y) = character["coordinates"]
     if direction == "SOUTH":
@@ -285,7 +287,7 @@ PRINTING RELATED FUNCTIONALITY START
 
 
 def get_character_name():
-    return input("State your name duelist\nYour reply: \n")
+    return input("State your name, duelist\nYour reply: \n")
 
 
 def print_intro(name):
@@ -303,12 +305,14 @@ def print_intro(name):
 
 
 def print_instructions():
-    print(f"The doors to Maximillion Pegasus's room will open when you reach level 3\n"
+    print(f"You will be approached by duelists while moving through the convention center\n"
+          f"Select cards from your deck to defeat them. Some cards have healing effects. These are important!\n"
+          f"The doors to Maximillion Pegasus's room will open when you reach level 3\n"
           f"Be warned that you will need a special weapon to defeat him\n")
 
 
 def print_end_of_game(name):
-    print(f"you have finished, {name}")
+    print(f"you have finished, {name}!")
 
 
 def print_obstacle_message(character, direction):
@@ -345,10 +349,6 @@ def is_alive(character):
     return character["CURRENT HP"] > 0
 
 
-def update_character_status(character):
-    pass
-
-
 def make_character(name):
     return {"name": name, "coordinates": (6, 4), "level": 1, "CURRENT HP": 100,
             "MAX HP": 100, "cards allowed": 2, "CURRENT EXP": 0, "EXP TO LEVEL": 150,
@@ -360,7 +360,14 @@ def make_character(name):
                 {"type": "GOBLIN'S SECRET REMEDY", "heal range": [50, 100]},
                 {"type": "BLUE-EYES ULTIMATE DRAGON", "damage range": [9999, 9999]},
                 {"type": "KURIBOH", "heal range": [20, 50]},
-                {"type": "DARK MAGICIAN GIRL", "damage range": [50, 150]}
+                {"type": "DARK MAGICIAN GIRL", "damage range": [50, 150]},
+                {"type": "SCAPEGOAT", "heal range": [10, 50]},
+                {"type": "JINZO", "damage range": [0, 150]},
+                {"type": "DIAN KETO THE CURE MASTER", "heal range":[1000, 1500]},
+                {"type": "CELTIC GUARDIAN", "damage range":[5, 20]},
+                {"type": "MAN-EATER BUG", "damage range": [0, 20]},
+                {"type": "BUSTER BLADER", "damage range": [50, 80]},
+                {"type": "TOON WIZARD", "damage range": [0, 40]}
             )
             }
 
@@ -368,12 +375,17 @@ def make_character(name):
 # Global constant for enumerating user choices in duels, a random subset will be chosen in a battle
 USER_INPUT_FIGHTING = ("DARK MAGICIAN", "BLUE-EYES WHITE DRAGON", "GOBLIN'S SECRET REMEDY",
                        "RED-EYES BLACK DRAGON", "DARK MAGICIAN GIRL", "BLUE-EYES ULTIMATE DRAGON",
-                       "KURIBOH"
+                       "KURIBOH", "SCAPEGOAT", "JINZO", "DIAN KETO THE CURE MASTER", "CELTIC GUARDIAN",
+                       "MAN-EATER BUG", "BUSTER BLADER", "TOON WIZARD"
                        )
 
 """
 CHARACTER RELATED FUNCTIONALITY END
 """
+
+
+def quit_game():
+    sys.exit()
 
 
 def is_none(environment):
@@ -398,6 +410,7 @@ def get_user_choice(choice_list):
 def game():
     rows = 10
     columns = 10
+    enemies = enemies_init()
     name = get_character_name()
     character = make_character(name)
     board = make_board(rows, columns)
@@ -411,6 +424,8 @@ def game():
         if direction == "MAP":
             map_board(board, character)
             continue
+        if direction == "QUIT":
+            quit_game()
         valid_move = validate_move(board, character, direction)
         if valid_move:
             set_coordinate_state(board, character["coordinates"], random_event)
@@ -418,9 +433,10 @@ def game():
             current_environment = describe_current_location(board, character)
             if current_environment[0] == "item":
                 item_obtained(character)
+                print(character)
                 continue
             if current_environment in list(filter(is_none, list(ENVIRONMENTS))):
-                execute_challenge_protocol(character, current_environment)
+                execute_challenge_protocol(character, current_environment, enemies)
                 print(character)
                 if not is_alive(character):
                     print_death_message()
