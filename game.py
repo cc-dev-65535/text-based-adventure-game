@@ -10,6 +10,7 @@ The main module of our text-based adventure game.
 import random
 import itertools
 import math
+import sys
 
 """
 #----combat----
@@ -78,26 +79,33 @@ def make_board(rows, columns):
         for pair in zip(itertools.repeat(row_coordinate, rows), range(columns)):
             board[pair] = random_event
     # Create initial map layout here with items, walls, and water
-    fill_board_coordinates_horizontal(board, (4, 2), 2, wall)
-    fill_board_coordinates_horizontal(board, (4, 6), 2, wall)
-    fill_board_coordinates_vertical(board, (0, 2), 4, water)
-    fill_board_coordinates_vertical(board, (0, 7), 4, water)
-    fill_board_coordinates_horizontal(board, (4, 4), 2, gate)
+    fill_board_coordinates_horizontal(board, (3, 2), 2, wall)
+    fill_board_coordinates_horizontal(board, (3, 6), 2, wall)
+    fill_board_coordinates_vertical(board, (0, 2), 3, wall)
+    fill_board_coordinates_vertical(board, (0, 7), 3, wall)
+    fill_board_coordinates_vertical(board, (5, 1), 4, table)
+    fill_board_coordinates_vertical(board, (5, 3), 4, table)
+    fill_board_coordinates_vertical(board, (5, 6), 4, table)
+    fill_board_coordinates_vertical(board, (5, 8), 4, table)
+    fill_board_coordinates_horizontal(board, (3, 4), 2, door)
+    fill_board_coordinates_horizontal(board, (1, 4), 2, table)
+    set_coordinate_state(board, (0, 4), final_boss)
     set_coordinate_state(board, (0, 0), item)
     set_coordinate_state(board, (0, 9), item)
     set_coordinate_state(board, (9, 9), item)
     set_coordinate_state(board, (9, 0), item)
-    set_coordinate_state(board, (6, 6), item)
+    set_coordinate_state(board, (6, 5), item)
     return board
 
 
 def map_board(board, character):
-    print("\nMAP:")
+    print("\nMAP OF CONVENTION CENTRE:")
     for coordinate, generate_function in board.items():
         print(f"[{generate_function(character)[1]}] ", end="")
         if coordinate[1] == 9:
             print("")
-    print("LEGEND: ! = you, # = table, % = wall, - = gate, ? = unknown, @ = piece of exodia\n")
+    print("LEGEND: ! = you, # = table, % = wall, - = door, "
+          "? = unknown, @ = piece of exodia, $ = Maximillion Pegasus\n")
 
 
 """
@@ -110,12 +118,6 @@ GAME PROGRESSION RELATED FUNCTIONALITY START
 """
 
 
-def leveled_up():
-    # increase cards allowed
-    # revive hitpoints
-    pass
-
-
 def character_get_exp(character, enemy):
     character["CURRENT EXP"] += enemy["exp gained"]
 
@@ -123,12 +125,12 @@ def character_get_exp(character, enemy):
 def handle_level_up(board, character):
     character["CURRENT EXP"] = 0
     character["level"] += 1
-    character["MAX HP"] = math.ceil(character["MAX HP"] * 1.5)
+    character["MAX HP"] = character["level"] * 100
     character["CURRENT HP"] = character["MAX HP"]
     character["cards allowed"] += 1
     if character["level"] == 3:
-        pass
-    print(f'congratulations for levelling to {character["level"]}!')
+        fill_board_coordinates_horizontal(board, (3, 4), 2, random_event)
+    print(f'Congratulations on leveling to level {character["level"]}!')
 
 
 def character_has_leveled(character):
@@ -152,6 +154,7 @@ def effect_the_enemy(enemy, character, skill):
     if "heal range" in skill_stat.keys():
         return False
     damage = random.randint(skill_stat["damage range"][0], skill_stat["damage range"][1])
+    print(max(enemy["HP"] - damage, 0))
     enemy["HP"] = max(enemy["HP"] - damage, 0)
     print(damage)
     print(f'You chose to attack with {skill_stat["type"]}!')
@@ -205,7 +208,7 @@ BOARD ENVIRONMENT RELATED FUNCTIONALITY START
 
 def random_event(character):
     weak_enemies_list = list(itertools.repeat(ENVIRONMENTS[0], character["level"]))
-    strong_enemies_list = list(itertools.repeat(ENVIRONMENTS[1], character["level"]))
+    strong_enemies_list = list(itertools.repeat(ENVIRONMENTS[1], character["level"] * 2))
     none_list = list(itertools.repeat(ENVIRONMENTS[2], 5))
     scaled_environment_list = list(itertools.chain.from_iterable([weak_enemies_list, strong_enemies_list, none_list]))
     # print(scaled_environment_list)
@@ -219,15 +222,15 @@ def cool_description(_):
                           ("", "!", "There are duels going on eveywhere")])
 
 
-def gate(_):
-    return "gate", "-", "A gate towers over you"
+def door(_):
+    return "door", "-", "A door towers over you"
 
 
 def wall(_):
     return "wall", "%", "A wall towers over you"
 
 
-def water(_):
+def table(_):
     return "table", "#", "A large table"
 
 
@@ -236,7 +239,7 @@ def item(_):
 
 
 def final_boss(_):
-    return "boss", "@", "Uh oh. Mr. Pegasus moves towards you..."
+    return "boss", "$", "Uh oh. Maximillion Pegasus moves towards you..."
 
 
 """
@@ -300,7 +303,8 @@ def print_intro(name):
 
 
 def print_instructions():
-    print(f"instructions go here")
+    print(f"The doors to Maximillion Pegasus's room will open when you reach level 3\n"
+          f"Be warned that you will need a special weapon to defeat him\n")
 
 
 def print_end_of_game(name):
@@ -309,6 +313,13 @@ def print_end_of_game(name):
 
 def print_obstacle_message(character, direction):
     print(f"can't move to {move_character(character, direction)}, there is an obstacle")
+
+
+def print_death_message():
+    print(f"You collapse to the floor in a daze\n"
+          f"It seems you don't have what it takes to hang with these guys\n"
+          f"RIP")
+    sys.exit()
 
 
 def describe_current_location(board, character):
@@ -326,6 +337,10 @@ CHARACTER RELATED FUNCTIONALITY START
 """
 
 
+def item_obtained(character):
+    character["exodia pieces"] += 1
+
+
 def is_alive(character):
     return character["CURRENT HP"] > 0
 
@@ -335,8 +350,9 @@ def update_character_status(character):
 
 
 def make_character(name):
-    return {"name": name, "coordinates": (6, 4), "level": 1, "CURRENT HP": 150,
-            "MAX HP": 150, "cards allowed": 3, "CURRENT EXP": 0, "EXP TO LEVEL": 150,
+    return {"name": name, "coordinates": (6, 4), "level": 1, "CURRENT HP": 100,
+            "MAX HP": 100, "cards allowed": 2, "CURRENT EXP": 0, "EXP TO LEVEL": 150,
+            "exodia pieces": 0, "boss dead": False,
             "SKILLS": (
                 {"type": "DARK MAGICIAN", "damage range": [10, 30]},
                 {"type": "BLUE-EYES WHITE DRAGON", "damage range": [100, 150]},
@@ -375,7 +391,7 @@ def get_user_choice(choice_list):
         user_input = input(f"{choices_to_print}\n")
         choices_to_print = "invalid input, make another selection:\n"
     input_name = [choice[1] for choice in enumerated_choices if str(choice[0]) == user_input]
-    # print(input_name)
+    print(input_name)
     return input_name[0]
 
 
@@ -400,9 +416,15 @@ def game():
             set_coordinate_state(board, character["coordinates"], random_event)
             character["coordinates"] = move_character(character, direction)
             current_environment = describe_current_location(board, character)
+            if current_environment[0] == "item":
+                item_obtained(character)
+                continue
             if current_environment in list(filter(is_none, list(ENVIRONMENTS))):
                 execute_challenge_protocol(character, current_environment)
                 print(character)
+                if not is_alive(character):
+                    print_death_message()
+                print(f"Nice victory, {name}!")
                 if character_has_leveled(character):
                     handle_level_up(board, character)
             # achieved_goal = check_if_goal_attained(board, character) # reached level 3, killed boss
