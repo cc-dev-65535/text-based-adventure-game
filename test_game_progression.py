@@ -32,8 +32,16 @@ class TestGameProgression(TestCase):
         self.assertEqual(test_character["cards allowed"], 3)
         handle_level_up(test_board, test_character)  # Character is level 2
         printed_this = mock_output.getvalue()
-        expected_output = f'Congratulations on leveling to level 2!\n...You feel like you are attracting ' \
-                          f'more attention from stronger duelists\n\n'
+        expected_output = r"""
+        ╭╮╱╱╭━━━┳╮╱╱╭┳━━━┳╮╱╱╱╭╮╱╭┳━━━╮
+        ┃┃╱╱┃╭━━┫╰╮╭╯┃╭━━┫┃╱╱╱┃┃╱┃┃╭━╮┃
+        ┃┃╱╱┃╰━━╋╮┃┃╭┫╰━━┫┃╱╱╱┃┃╱┃┃╰━╯┃
+        ┃┃╱╭┫╭━━╯┃╰╯┃┃╭━━┫┃╱╭╮┃┃╱┃┃╭━━╯
+        ┃╰━╯┃╰━━╮╰╮╭╯┃╰━━┫╰━╯┃┃╰━╯┃┃
+        ╰━━━┻━━━╯╱╰╯╱╰━━━┻━━━╯╰━━━┻╯
+                                        """
+        expected_output += f'\nCongratulations on leveling to level 2!\n...But you feel like you are attracting ' \
+                          f'more attention from stronger duelists\n'
         self.assertEqual(expected_output, printed_this)
         self.assertEqual(test_character["CURRENT EXP"], 0)
         self.assertEqual(test_character["level"], 2)

@@ -33,7 +33,7 @@ class TestMovement(TestCase):
         set_coordinate_state(test_board, (0, 1), wall)
         self.assertEqual(validate_move(test_board, test_character, "EAST"), False)
         printed_this = mock_output.getvalue()
-        expected_output = f"can't move to (0, 1), there is a wall that towers over you\n"
+        expected_output = f"Can't move there. There is a wall that towers over you\n"
         self.assertEqual(expected_output, printed_this)
 
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -43,5 +43,5 @@ class TestMovement(TestCase):
         test_character["coordinates"] = (0, 0)
         self.assertEqual(validate_move(test_board, test_character, "WEST"), False)
         printed_this = mock_output.getvalue()
-        expected_output = f"can't move to (0, -1), it is outside of the convention center\n"
+        expected_output = f"Can't move there. It is outside of the convention center\n"
         self.assertEqual(expected_output, printed_this)

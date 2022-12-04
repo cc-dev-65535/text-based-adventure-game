@@ -148,7 +148,7 @@ def map_board(board: dict, character: dict) -> None:
         if coordinate[1] == 9:
             print("")
     print("LEGEND: ! = you, # = table, % = wall, - = door, "
-          "? = unknown, @ = piece of exodia, $ = Maximillion Pegasus\n")
+          "? = unknown, @ = piece of exodia, $ = Maximillion Pegasus")
 
 
 """
@@ -173,8 +173,16 @@ def item_obtained(character: dict) -> None:
     """
     character["exodia pieces"] += 1
     if character["exodia pieces"] >= 5:
+        print(r"""       
+            ╭━━━┳━╮╭━┳━━━┳━━━┳━━┳━━━╮
+            ┃╭━━┻╮╰╯╭┫╭━╮┣╮╭╮┣┫┣┫╭━╮┃
+            ┃╰━━╮╰╮╭╯┃┃╱┃┃┃┃┃┃┃┃┃┃╱┃┃
+            ┃╭━━╯╭╯╰╮┃┃╱┃┃┃┃┃┃┃┃┃╰━╯┃
+            ┃╰━━┳╯╭╮╰┫╰━╯┣╯╰╯┣┫┣┫╭━╮┃
+            ╰━━━┻━╯╰━┻━━━┻━━━┻━━┻╯╱╰╯
+                                    """)
         print(f"You have assembled the forbidden one\n"
-              f"The power of exodia makes you feel invincible...\n")
+              f"The power of exodia makes you feel invincible...")
 
 
 def character_get_exp(character: dict, enemy: dict) -> None:
@@ -216,8 +224,16 @@ def handle_level_up(board: dict, character: dict) -> None:
     character["cards allowed"] += 1
     if character["level"] == 3:
         fill_board_coordinates_row(board, (3, 4), 2, random_event)
+    print(r"""
+        ╭╮╱╱╭━━━┳╮╱╱╭┳━━━┳╮╱╱╱╭╮╱╭┳━━━╮
+        ┃┃╱╱┃╭━━┫╰╮╭╯┃╭━━┫┃╱╱╱┃┃╱┃┃╭━╮┃
+        ┃┃╱╱┃╰━━╋╮┃┃╭┫╰━━┫┃╱╱╱┃┃╱┃┃╰━╯┃
+        ┃┃╱╭┫╭━━╯┃╰╯┃┃╭━━┫┃╱╭╮┃┃╱┃┃╭━━╯
+        ┃╰━╯┃╰━━╮╰╮╭╯┃╰━━┫╰━╯┃┃╰━╯┃┃
+        ╰━━━┻━━━╯╱╰╯╱╰━━━┻━━━╯╰━━━┻╯
+                                        """)
     print(f'Congratulations on leveling to level {character["level"]}!\n'
-          f"...You feel like you are attracting more attention from stronger duelists\n")
+          f"...But you feel like you are attracting more attention from stronger duelists")
 
 
 def character_has_leveled(character: dict) -> bool:
@@ -277,14 +293,10 @@ def effect_the_enemy(enemy: dict, character: dict, skill: str) -> bool:
     """
     skill_stat_list = [skills_stats for skills_stats in character["SKILLS"] if skills_stats["type"] == skill]
     skill_stat = skill_stat_list[0]
-    print(skill_stat)
     if "heal range" in skill_stat.keys():
         return False
     damage = random.randint(skill_stat["damage range"][0], skill_stat["damage range"][1])
-    print(enemy["HP"])
-    print(max(enemy["HP"] - damage, 0))
     enemy["HP"] = max(enemy["HP"] - damage, 0)
-    print(damage)
     print(f'\nYou chose to attack with {skill_stat["type"]}!\n'
           f'The opposing duelist received {damage} damage to their lifepoints! '
           f'Their lifepoints are now: {enemy["HP"]}\n')
@@ -309,7 +321,6 @@ def effect_the_character(enemy: dict, character: dict, skill: str) -> None:
     """
     skill_stat_list = [skills_stats for skills_stats in character["SKILLS"] if skills_stats["type"] == skill]
     skill_stat = skill_stat_list[0]
-    print(skill_stat)
     if "heal range" in skill_stat.keys():
         health_gained = random.randint(skill_stat["heal range"][0], skill_stat["heal range"][1])
         character["CURRENT HP"] = min(character["CURRENT HP"] + health_gained, character["MAX HP"])
@@ -363,7 +374,7 @@ def execute_challenge_protocol(character: dict, current_environment: tuple, enem
     if (current_environment[0] == "boss") and (character["exodia pieces"] >= 5):
         update_game_state_boss(enemy)
     else:
-        print(f"You are fighting a {current_environment[0]}!\n")
+        print(f"\nYou are fighting a {current_environment[0]}!")
     while is_alive(character):
         skill_choices = []
         try:
@@ -378,8 +389,6 @@ def execute_challenge_protocol(character: dict, current_environment: tuple, enem
                     character["boss killed"] = True
                 break
             effect_the_character(enemy, character, skill)
-            print(character)
-            print(enemy)
     character_get_exp(character, enemy)
 
 
@@ -584,11 +593,11 @@ def move_character(character: dict, direction: str) -> tuple[int, int]:
     (x, y) = character["coordinates"]
     if direction == "SOUTH":
         new_coordinates = (x + 1, y)
-    if direction == "NORTH":
+    elif direction == "NORTH":
         new_coordinates = (x - 1, y)
-    if direction == "EAST":
+    elif direction == "EAST":
         new_coordinates = (x, y + 1)
-    if direction == "WEST":
+    elif direction == "WEST":
         new_coordinates = (x, y - 1)
     return new_coordinates
 
@@ -617,10 +626,10 @@ def validate_move(board: dict, character: dict, direction: str) -> bool:
     """
     coordinates_moved = move_character(character, direction)
     if coordinates_moved not in board.keys():
-        print(f"can't move to {coordinates_moved}, it is outside of the convention center")
+        print(f"Can't move there. It is outside of the convention center")
         return False
     if board[coordinates_moved](character)[0] in OBSTACLES:
-        print(f"can't move to {coordinates_moved}, there is {board[coordinates_moved](character)[2]}")
+        print(f"Can't move there. There is {board[coordinates_moved](character)[2]}")
         return False
     return True
 
@@ -658,7 +667,7 @@ def print_intro(name: str) -> None:
           f"It seems like you have signed up for this major dueling tournament\n"
           f"I'm the coordinator for this event and I'll give you some tips\n"
           f"Oh, you don't know anything about dueling, you say? Well, that's too bad\n"
-          f"Your only way out of here is to beat the omega duelist 'Maximillion Pegasus'\n"
+          f"Your only way out of here is to beat the top duelist, 'Maximillion Pegasus'\n"
           f"I heard his deck is pretty awesome and you can't beat him conventionally\n"
           f"You probably have to find some cheat cards to bring him down\n"
           f"I've been hearing about this exodia card that is busted\n"
@@ -688,7 +697,18 @@ def print_end_of_game(name: str) -> None:
     precondition: name must be a string that is character's name
     postcondition: messages are printed to the screen that include name
     """
-    print(f"you have finished the game, {name}!")
+    print(r"""
+        ╭━━━┳━━━┳━━━┳━━━┳━━━━╮╱╱╭┳━━━┳━━╮
+        ┃╭━╮┃╭━╮┃╭━━┫╭━╮┃╭╮╭╮┃╱╱┃┃╭━╮┃╭╮┃
+        ┃┃╱╰┫╰━╯┃╰━━┫┃╱┃┣╯┃┃╰╯╱╱┃┃┃╱┃┃╰╯╰╮
+        ┃┃╭━┫╭╮╭┫╭━━┫╰━╯┃╱┃┃╱╱╭╮┃┃┃╱┃┃╭━╮┃
+        ┃╰┻━┃┃┃╰┫╰━━┫╭━╮┃╱┃┃╱╱┃╰╯┃╰━╯┃╰━╯┃
+        ╰━━━┻╯╰━┻━━━┻╯╱╰╯╱╰╯╱╱╰━━┻━━━┻━━━╯
+                                        """)
+    print(f"You have finished the game, {name}!\n"
+          f"Maximillion Pegasus has been sent to the shadow realm\n"
+          f"You now take his place as the top duelist\n"
+          f"This is just the beginning of a new journey!")
 
 
 def print_death_message() -> None:
@@ -699,8 +719,15 @@ def print_death_message() -> None:
     postcondition: program is terminated
     """
     print(f"You collapse to the floor in a daze\n"
-          f"It seems you don't have what it takes to hang with these duelists\n"
-          f"RIP")
+          f"It seems you don't have what it takes to hang with these duelists")
+    print(r"""
+        ╭━━━┳━━┳━━━╮
+        ┃╭━╮┣┫┣┫╭━╮┃
+        ┃╰━╯┃┃┃┃╰━╯┃
+        ┃╭╮╭╯┃┃┃╭━━╯
+        ┃┃┃╰┳┫┣┫┃
+        ╰╯╰━┻━━┻╯
+                """)
     sys.exit()
 
 
@@ -717,7 +744,7 @@ def describe_current_location(board: dict, character: dict):
     :return: a tuple that represents the environment at the character's current coordinates
     """
     environment = board[character["coordinates"]](character)
-    print(f"{environment[2]}. You are at {character['coordinates']}\n")
+    print(f"\n{environment[2]}")
     return environment
 
 
@@ -729,7 +756,14 @@ def print_victory_message(name: str) -> None:
     precondition: name is a string that is character's name
     postcondition: messages are printed to the screen that include name
     """
-    print(f"Nice victory, {name}!\n")
+    print(r"""
+        ╭╮╱╱╭┳━━━┳╮╱╭╮╭╮╭╮╭┳━━┳━╮╱╭╮
+        ┃╰╮╭╯┃╭━╮┃┃╱┃┃┃┃┃┃┃┣┫┣┫┃╰╮┃┃
+        ╰╮╰╯╭┫┃╱┃┃┃╱┃┃┃┃┃┃┃┃┃┃┃╭╮╰╯┃
+        ╱╰╮╭╯┃┃╱┃┃┃╱┃┃┃╰╯╰╯┃┃┃┃┃╰╮┃┃
+        ╱╱┃┃╱┃╰━╯┃╰━╯┃╰╮╭╮╭╋┫┣┫┃╱┃┃┃
+        ╱╱╰╯╱╰━━━┻━━━╯╱╰╯╰╯╰━━┻╯╱╰━╯""")
+    print(f"Nice victory, {name}!")
 
 
 """
@@ -818,7 +852,7 @@ def get_user_choice(choice_list: tuple) -> str:
     :return: a string that represents the user's choice
     """
     user_input = ""
-    choices_to_print = "Make a selection:\n"
+    choices_to_print = "\nMake a selection:\n"
     enumerated_choices = list(enumerate(choice_list, 1))
     valid_input = [str(choice[0]) for choice in enumerated_choices]
     while user_input not in valid_input:
@@ -861,11 +895,9 @@ def game() -> None:
             current_environment = describe_current_location(board, character)
             if current_environment[0] == "item":
                 item_obtained(character)
-                print(character)
                 continue
             if is_battle_environment(current_environment):
                 execute_challenge_protocol(character, current_environment, enemies)
-                print(character)
                 if not is_alive(character):
                     print_death_message()
                 print_victory_message(name)
