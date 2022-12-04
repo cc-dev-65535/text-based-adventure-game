@@ -21,15 +21,16 @@ class TestGameProgression(TestCase):
         character_get_exp(test_character, test_enemy)
         self.assertEqual(test_character["CURRENT EXP"], 50)
 
+    @patch('random.choice', return_value=("nothing", "?", "There is nothing here, phew"))
     @patch('sys.stdout', new_callable=io.StringIO)
-    def test_handle_level_up(self, mock_output):
+    def test_handle_level_up(self, mock_output, random_choice):
         test_board = make_board(10, 10)
         test_character = make_character("John")
         self.assertEqual(test_character["level"], 1)
         self.assertEqual(test_character["MAX HP"], 100)
         self.assertEqual(test_character["CURRENT HP"], test_character["MAX HP"])
         self.assertEqual(test_character["cards allowed"], 3)
-        handle_level_up(test_board, test_character)
+        handle_level_up(test_board, test_character) # Character is level 2
         printed_this = mock_output.getvalue()
         expected_output = f'Congratulations on leveling to level 2!\n...You feel like you are attracting ' \
                           f'more attention from stronger duelists\n\n'
@@ -39,6 +40,9 @@ class TestGameProgression(TestCase):
         self.assertEqual(test_character["MAX HP"], 200)
         self.assertEqual(test_character["CURRENT HP"], test_character["MAX HP"])
         self.assertEqual(test_character["cards allowed"], 4)
+        handle_level_up(test_board, test_character) # Character is level 3, update game board
+        self.assertEqual(test_board[(3, 4)](test_character), ("nothing", "?", "There is nothing here, phew"))
+        self.assertEqual(test_board[(3, 5)](test_character), ("nothing", "?", "There is nothing here, phew"))
 
     def test_character_has_leveled(self):
         test_character = make_character("John Doe")
