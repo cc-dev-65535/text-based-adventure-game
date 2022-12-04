@@ -48,6 +48,7 @@ def fill_board_coordinates_column(board: dict, coordinate: tuple[int, int], time
     precondition: board is a dictionary that represents a board
     precondition: coordinate is a tuple that represents coordinates with exactly 2 integer elements contained inside
     precondition: times is an integer that is in the range [1, 10]
+    precondition: coordinate[1] + times must be a number less than or equal to 10
     precondition: environment_function must be a function that takes a dictionary and returns a tuple
     postcondition: the passed in function is stored in the board dictionary 'times' times as a column of coordinates
                    that starts from the passed in coordinate and is of 'times' length
@@ -68,6 +69,7 @@ def fill_board_coordinates_row(board: dict, coordinate: tuple[int, int], times: 
     precondition: board is a dictionary that represents a board
     precondition: coordinate is a tuple that represents coordinates with exactly 2 integer elements contained inside
     precondition: times is an integer that is in the range [1, 10]
+    precondition: coordinate[1] + times must be a number less than or equal to 10
     precondition: environment_function must be a function that takes a dictionary and returns a tuple
     postcondition: the passed in function is stored in the board dictionary 'times' times as a row of coordinates
                    that starts from the passed in coordinate and is of 'times' length
@@ -86,6 +88,7 @@ def set_coordinate_state(board: dict, coordinate: tuple, environment_function) -
     :param environment_function: a function that takes a dictionary and returns a tuple
     precondition: board is a dictionary that represents a board
     precondition: coordinate is a tuple that represents coordinates with exactly 2 integer elements contained inside
+    preconditon: both numbers in coordinate tuple must be in the range [0,9]
     precondition: environment_function must be a function that takes a dictionary and returns a tuple
     postcondition: board with coordinate key that matches the coordinate tuple will store the passed in function
     """
