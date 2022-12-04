@@ -788,12 +788,12 @@ def make_character(name: str) -> dict:
                 {"type": "BLUE-EYES WHITE DRAGON", "damage range": [100, 150]},
                 {"type": "RED-EYES BLACK DRAGON", "damage range": [50, 100]},
                 {"type": "GOBLIN'S SECRET REMEDY", "heal range": [50, 100]},
-                {"type": "BLUE-EYES ULTIMATE DRAGON", "damage range": [9999, 9999]},
+                {"type": "BLUE-EYES ULTIMATE DRAGON", "damage range": [999, 999]},
                 {"type": "KURIBOH", "heal range": [20, 70]},
                 {"type": "DARK MAGICIAN GIRL", "damage range": [50, 100]},
                 {"type": "SCAPEGOAT", "heal range": [10, 70]},
                 {"type": "JINZO", "damage range": [0, 150]},
-                {"type": "DIAN KETO THE CURE MASTER", "heal range": [1000, 1500]},
+                {"type": "DIAN KETO THE CURE MASTER", "heal range": [999, 999]},
                 {"type": "CELTIC GUARDIAN", "damage range": [5, 25]},
                 {"type": "MAN-EATER BUG", "damage range": [0, 20]},
                 {"type": "BUSTER BLADER", "damage range": [50, 80]},
@@ -827,7 +827,7 @@ def get_user_choice(choice_list: tuple) -> str:
         user_input = input(f"{choices_to_print}>")
         choices_to_print = "Invalid input, make another selection:\n"
     input_name = [choice[1] for choice in enumerated_choices if str(choice[0]) == user_input]
-    print(input_name)
+    # print(input_name)
     return input_name[0]
 
 

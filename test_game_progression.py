@@ -30,7 +30,7 @@ class TestGameProgression(TestCase):
         self.assertEqual(test_character["MAX HP"], 100)
         self.assertEqual(test_character["CURRENT HP"], test_character["MAX HP"])
         self.assertEqual(test_character["cards allowed"], 3)
-        handle_level_up(test_board, test_character) # Character is level 2
+        handle_level_up(test_board, test_character)  # Character is level 2
         printed_this = mock_output.getvalue()
         expected_output = f'Congratulations on leveling to level 2!\n...You feel like you are attracting ' \
                           f'more attention from stronger duelists\n\n'
@@ -40,7 +40,7 @@ class TestGameProgression(TestCase):
         self.assertEqual(test_character["MAX HP"], 200)
         self.assertEqual(test_character["CURRENT HP"], test_character["MAX HP"])
         self.assertEqual(test_character["cards allowed"], 4)
-        handle_level_up(test_board, test_character) # Character is level 3, update game board
+        handle_level_up(test_board, test_character)  # Character is level 3, update game board
         self.assertEqual(test_board[(3, 4)](test_character), ("nothing", "?", "There is nothing here, phew"))
         self.assertEqual(test_board[(3, 5)](test_character), ("nothing", "?", "There is nothing here, phew"))
 
