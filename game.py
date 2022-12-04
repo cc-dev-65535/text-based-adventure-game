@@ -24,6 +24,13 @@ ENVIRONMENTS = (("weak duelist", "?", "Yikes! A weak duelist approaches you"),
                 ("elite duelist", "?", "Oh my! An elite duelist approaches you"),
                 ("nothing", "?", "There is nothing here, phew"))
 
+# Global constant for enumerating user choices in duels, a random subset will be chosen in a battle
+USER_INPUT_FIGHTING = ("DARK MAGICIAN", "BLUE-EYES WHITE DRAGON", "GOBLIN'S SECRET REMEDY",
+                       "RED-EYES BLACK DRAGON", "DARK MAGICIAN GIRL", "BLUE-EYES ULTIMATE DRAGON",
+                       "KURIBOH", "SCAPEGOAT", "JINZO", "DIAN KETO THE CURE MASTER", "CELTIC GUARDIAN",
+                       "MAN-EATER BUG", "BUSTER BLADER", "TOON WIZARD"
+                       )
+
 
 """
 BOARD RELATED FUNCTIONALITY START
@@ -113,7 +120,7 @@ def make_board(rows: int, columns: int) -> dict:
     fill_board_coordinates_row(board, (3, 4), 2, door)
     fill_board_coordinates_row(board, (1, 4), 2, table)
     # Create boss and item environments in specific locations
-    set_coordinate_state(board, (5, 4), final_boss)
+    set_coordinate_state(board, (0, 4), final_boss)
     set_coordinate_state(board, (0, 1), item)
     set_coordinate_state(board, (3, 9), item)
     set_coordinate_state(board, (9, 9), item)
@@ -793,13 +800,6 @@ def make_character(name: str) -> dict:
             }
 
 
-# Global constant for enumerating user choices in duels, a random subset will be chosen in a battle
-USER_INPUT_FIGHTING = ("DARK MAGICIAN", "BLUE-EYES WHITE DRAGON", "GOBLIN'S SECRET REMEDY",
-                       "RED-EYES BLACK DRAGON", "DARK MAGICIAN GIRL", "BLUE-EYES ULTIMATE DRAGON",
-                       "KURIBOH", "SCAPEGOAT", "JINZO", "DIAN KETO THE CURE MASTER", "CELTIC GUARDIAN",
-                       "MAN-EATER BUG", "BUSTER BLADER", "TOON WIZARD"
-                       )
-
 """
 CHARACTER RELATED FUNCTIONALITY END
 """
@@ -868,8 +868,6 @@ def game() -> None:
                 print_victory_message(name)
                 if character_has_leveled(character):
                     handle_level_up(board, character)
-        # else:
-            # print_obstacle_message(character, direction)
     print_end_of_game(name)
 
 
