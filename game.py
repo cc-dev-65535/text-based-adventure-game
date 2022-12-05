@@ -621,7 +621,7 @@ def validate_move(board: dict, character: dict, direction: str) -> bool:
     (6, 4)
     >>> test_board = make_board(10, 10)
     >>> validate_move(test_board, test_character, "WEST")
-    can't move to (6, 3), there is a large table
+    Can't move there. There is a large table
     False
     """
     coordinates_moved = move_character(character, direction)
