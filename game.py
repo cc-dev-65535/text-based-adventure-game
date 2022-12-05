@@ -142,12 +142,12 @@ def map_board(board: dict, character: dict) -> None:
     precondition: character must be a dictionary that represents a character
     postcondition: board dictionary is printed the screen in human-readable format
     """
-    print("\nMAP OF CONVENTION CENTRE:")
+    print(f"\nMAP OF CONVENTION CENTRE:")
     for coordinate, environment_function in board.items():
         print(f"[{environment_function(character)[1]}] ", end="")
         if coordinate[1] == 9:
-            print("")
-    print("LEGEND: ! = you, # = table, % = wall, - = door, "
+            print(f"")
+    print(f"LEGEND: ! = you, # = table, % = wall, - = door, "
           "? = unknown, @ = piece of exodia, $ = Maximillion Pegasus")
 
 
@@ -259,7 +259,7 @@ def quit_game() -> None:
     postcondition: message is printed to screen
     postcondition: program will terminate
     """
-    print("\nThank you for playing!")
+    print(f"\nThank you for playing!")
     sys.exit()
 
 
