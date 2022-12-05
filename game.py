@@ -324,15 +324,14 @@ def effect_the_character(enemy: dict, character: dict, skill: str) -> None:
     if "heal range" in skill_stat.keys():
         health_gained = random.randint(skill_stat["heal range"][0], skill_stat["heal range"][1])
         character["CURRENT HP"] = min(character["CURRENT HP"] + health_gained, character["MAX HP"])
-        print(f'You chose to heal with {skill_stat["type"]}!\n'
+        print(f'\nYou chose to heal with {skill_stat["type"]}!\n'
               f'You healed {health_gained} lifepoints! '
-              f'Your lifepoints are now: {character["CURRENT HP"]}')
+              f'Your lifepoints are now: {character["CURRENT HP"]}\n')
     damage = random.randint(enemy["damage range"][0], enemy["damage range"][1])
-    print(damage)
     character["CURRENT HP"] = max(character["CURRENT HP"] - damage, 0)
     print(f'The opposing duelist prepares an attack!\n'
           f'you received {damage} damage to your lifepoints! '
-          f'Your lifepoints are now: {character["CURRENT HP"]}\n')
+          f'Your lifepoints are now: {character["CURRENT HP"]}')
 
 
 def update_game_state_boss(enemy: dict) -> None:
@@ -346,7 +345,7 @@ def update_game_state_boss(enemy: dict) -> None:
     """
     enemy["damage range"] = [70, 100]
     print(f"Pegasus seems weary of your deck... This is your chance!\n"
-          f"This is the duel of your life! Believe in the heart of the cards!\n")
+          f"This is the duel of your life! Believe in the heart of the cards!")
 
 
 def execute_challenge_protocol(character: dict, current_environment: tuple, enemies: tuple) -> None:
