@@ -717,7 +717,7 @@ def print_death_message() -> None:
     postcondition: messages are printed to the screen
     postcondition: program is terminated
     """
-    print(f"You collapse to the floor in a daze\n"
+    print(f"\nYou collapse to the floor in a daze\n"
           f"It seems you don't have what it takes to hang with these duelists")
     print(r"""
         ╭━━━┳━━┳━━━╮
