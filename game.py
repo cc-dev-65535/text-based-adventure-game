@@ -339,7 +339,7 @@ def update_game_state_boss(enemy: dict) -> None:
     Updates enemy stats and valid skills if the character fights the boss while holding Exodia.
 
     :param enemy: a dictionary
-    precondition: enemy is a dictionary that represent enemy's stats
+    precondition: enemy is a dictionary that represent enemy's stats and must be the boss enemy dictionary
     postcondition: given enemy dictionary for a boss has their "damage range" key set to list equal to [50, 100]
     postcondition: messages are printed to the screen
     """

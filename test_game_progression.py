@@ -41,7 +41,7 @@ class TestGameProgression(TestCase):
         ╰━━━┻━━━╯╱╰╯╱╰━━━┻━━━╯╰━━━┻╯
                                         """
         expected_output += f'\nCongratulations on leveling to level 2!\n...But you feel like you are attracting ' \
-                          f'more attention from stronger duelists\n'
+                           f'more attention from stronger duelists\n'
         self.assertEqual(expected_output, printed_this)
         self.assertEqual(test_character["CURRENT EXP"], 0)
         self.assertEqual(test_character["level"], 2)
