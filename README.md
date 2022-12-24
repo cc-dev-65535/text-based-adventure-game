@@ -1,5 +1,4 @@
-Robert Oh (A01321210)  
-Collin Chan (A01337496)  
+# Yu-Gi-Oh Text-Based Adventure Game
 
 | Element                                               | Location    |
 |-------------------------------------------------------|-------------|
