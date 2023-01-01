@@ -1,4 +1,8 @@
-# Yu-Gi-Oh Text-Based Adventure Game
+# Yu-Gi-Oh! Text-Based Adventure Game
+
+2D dungeon crawler with a Yu-Gi-Oh theme.
+
+## Marking 
 
 | Element                                               | Location    |
 |-------------------------------------------------------|-------------|
